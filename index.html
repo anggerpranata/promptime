@@ -47,7 +47,7 @@
             color: #000;
         }
 
-        /* Top Control Bar for Editor */
+        /* Top Control Bar Shared Style */
         .control-bar {
             background-color: #ffffff;
             border-bottom: 1px solid #dcdcdc;
@@ -111,7 +111,7 @@
             font-family: monospace;
         }
 
-        input[type="number"] { width: 55px; }
+        input[type="number"] { width: 50px; }
 
         input[type="color"] {
             width: 28px;
@@ -132,6 +132,7 @@
 
         .tab-content.active {
             display: flex;
+            flex-direction: column;
         }
 
         /* Tab 1: Editor Window */
@@ -153,14 +154,13 @@
         .timer-window {
             flex: 1;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             background-color: #ffffff;
             color: #000000;
-            gap: 20px;
             padding: 20px;
             transition: background-color 0.2s, color 0.2s;
+            cursor: pointer;
         }
 
         .timer-display-box {
@@ -170,7 +170,7 @@
         }
 
         .large-timer-display {
-            font-size: 80px;
+            font-size: 120px;
             font-family: monospace;
             font-weight: bold;
             line-height: 1.2;
@@ -184,27 +184,6 @@
 
         .timer-window.time-up {
             animation: custom-flashing 0.4s infinite alternate !important;
-        }
-
-        .timer-settings-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: #ffffff;
-            color: #333333;
-            padding: 15px 20px;
-            border: 1px solid #ababab;
-            border-radius: 4px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            z-index: 10;
-        }
-
-        .settings-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            font-size: 0.85rem;
         }
 
         /* Status Bar Bottom */
@@ -226,83 +205,88 @@
         <button class="tab-btn" onclick="switchTab('timerTab', this)">⏱️ Jendela Timer</button>
     </div>
 
-    <div class="control-bar" id="editorControls">
-        <div class="menu-group">
-            <button class="btn" onclick="newFile()">File Baru</button>
-            <button class="btn" onclick="document.getElementById('fileInput').click()">Buka File</button>
-            <button class="btn" onclick="downloadFile()">Simpan (.txt)</button>
-            <input type="file" id="fileInput" style="display: none;" accept=".txt" onchange="openFile(event)">
-        </div>
-
-        <div class="menu-group">
-            <div class="control-item">
-                <label>Rataan:</label>
-                <button class="btn btn-align active" id="alignLeft" onclick="setTextAlign('left')">⬅ Left</button>
-                <button class="btn btn-align" id="alignCenter" onclick="setTextAlign('center')">↔ Center</button>
-                <button class="btn btn-align" id="alignRight" onclick="setTextAlign('right')">➡ Right</button>
-            </div>
-
-            <div class="control-item">
-                <label for="fontSize">Ukuran:</label>
-                <input type="number" id="fontSize" value="16" min="10" max="72">
-            </div>
-
-            <div class="control-item">
-                <label for="textColor">Font:</label>
-                <input type="color" id="textColor" value="#000000">
-            </div>
-
-            <div class="control-item">
-                <label for="bgColor">Kertas:</label>
-                <input type="color" id="bgColor" value="#ffffff">
-            </div>
-        </div>
-    </div>
-
     <div id="editorTab" class="tab-content active">
+        <div class="control-bar">
+            <div class="menu-group">
+                <button class="btn" onclick="newFile()">File Baru</button>
+                <button class="btn" onclick="document.getElementById('fileInput').click()">Buka File</button>
+                <button class="btn" onclick="downloadFile()">Simpan (.txt)</button>
+                <input type="file" id="fileInput" style="display: none;" accept=".txt" onchange="openFile(event)">
+            </div>
+
+            <div class="menu-group">
+                <div class="control-item">
+                    <label>Rataan:</label>
+                    <button class="btn btn-align active" id="alignLeft" onclick="setTextAlign('left')">⬅ Left</button>
+                    <button class="btn btn-align" id="alignCenter" onclick="setTextAlign('center')">↔ Center</button>
+                    <button class="btn btn-align" id="alignRight" onclick="setTextAlign('right')">➡ Right</button>
+                </div>
+
+                <div class="control-item">
+                    <label for="fontSize">Ukuran:</label>
+                    <input type="number" id="fontSize" value="16" min="10" max="72">
+                </div>
+
+                <div class="control-item">
+                    <label for="textColor">Font:</label>
+                    <input type="color" id="textColor" value="#000000">
+                </div>
+
+                <div class="control-item">
+                    <label for="bgColor">Kertas:</label>
+                    <input type="color" id="bgColor" value="#ffffff">
+                </div>
+            </div>
+        </div>
+
         <textarea id="notepad" placeholder="Mulai mengetik di sini..." oninput="updateStats()"></textarea>
     </div>
 
     <div id="timerTab" class="tab-content">
-        <div class="timer-window" id="timerWindow" onclick="resetTimerFlashing()">
-            <div class="timer-display-box">
-                <div class="large-timer-display" id="largeTimerDisplay">01:00</div>
-            </div>
-            
-            <div class="timer-settings-panel" onclick="event.stopPropagation()">
-                <div class="settings-row">
+        <div class="control-bar">
+            <div class="menu-group">
+                <div class="control-item">
                     <label>Durasi:</label>
                     <input type="number" id="timerMins" value="1" min="0" max="180"> m
                     <input type="number" id="timerSecs" value="0" min="0" max="59"> s
-                    
-                    <label style="margin-left: 8px;">Ukuran Font:</label>
-                    <input type="number" id="timerFontSize" value="80" min="20" max="250"> px
                 </div>
 
-                <div class="settings-row">
-                    <label for="timerTextColor">Warna Font Timer:</label>
-                    <input type="color" id="timerTextColor" value="#000000">
+                <div class="control-item">
+                    <label for="timerFontSize">Ukuran:</label>
+                    <input type="number" id="timerFontSize" value="120" min="20" max="250">
+                </div>
 
-                    <label for="timerBgColor" style="margin-left: 8px;">Warna Latar Timer:</label>
+                <div class="control-item">
+                    <label for="timerTextColor">Font:</label>
+                    <input type="color" id="timerTextColor" value="#000000">
+                </div>
+
+                <div class="control-item">
+                    <label for="timerBgColor">Latar:</label>
                     <input type="color" id="timerBgColor" value="#ffffff">
                 </div>
 
-                <div class="settings-row">
-                    <label for="flashColor1">Warna Kedip 1:</label>
+                <div class="control-item">
+                    <label for="flashColor1">Kedip 1:</label>
                     <input type="color" id="flashColor1" value="#ff0000">
-
-                    <label for="flashColor2" style="margin-left: 8px;">Warna Kedip 2:</label>
+                    <label for="flashColor2">Kedip 2:</label>
                     <input type="color" id="flashColor2" value="#ffff00">
                 </div>
+            </div>
 
-                <div class="settings-row">
-                    <label for="alertMessage">Pesan Waktu Habis:</label>
-                    <input type="text" id="alertMessage" value="WAKTU HABIS!" style="flex: 1; min-width: 180px;">
+            <div class="menu-group">
+                <div class="control-item">
+                    <label for="alertMessage">Pesan Habis:</label>
+                    <input type="text" id="alertMessage" value="WAKTU HABIS!" style="width: 140px;">
                 </div>
 
-                <div class="settings-row" style="justify-content: center; margin-top: 5px;">
-                    <button class="btn btn-start" id="timerBtn" style="font-size: 1rem; padding: 6px 20px;" onclick="toggleTimer()">Start Countdown</button>
-                </div>
+                <button class="btn btn-start" id="timerBtn" onclick="toggleTimer()">Start Countdown</button>
+            </div>
+        </div>
+
+        <div class="timer-window" id="timerWindow" onclick="resetTimerFlashing()">
+            <div class="timer-display-box">
+                <div class="large-timer-display" id="largeTimerDisplay">01:00</div>
             </div>
         </div>
     </div>
@@ -345,12 +329,6 @@
 
             document.getElementById(tabId).classList.add('active');
             btnElement.classList.add('active');
-
-            if (tabId === 'editorTab') {
-                document.getElementById('editorControls').style.display = 'flex';
-            } else {
-                document.getElementById('editorControls').style.display = 'none';
-            }
         }
 
         // Init App
