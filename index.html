@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notepad Web</title>
+    <title>Notepad Web dengan Timer</title>
     <style>
         * {
             box-sizing: border-box;
@@ -36,6 +36,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
         .control-item {
@@ -49,24 +50,46 @@
         .btn {
             background-color: #ffffff;
             border: 1px solid #ababab;
-            padding: 4px 12px;
+            padding: 4px 10px;
             font-size: 0.85rem;
             cursor: pointer;
             border-radius: 2px;
+            font-weight: 600;
         }
 
         .btn:hover {
             background-color: #e5e5e5;
         }
 
+        .btn-start {
+            background-color: #008cba;
+            color: white;
+            border-color: #007399;
+        }
+
+        .btn-start:hover {
+            background-color: #007399;
+        }
+
+        .btn-stop {
+            background-color: #d9534f;
+            color: white;
+            border-color: #d43f3a;
+        }
+
+        .btn-stop:hover {
+            background-color: #c9302c;
+        }
+
         /* Input Controls */
         input[type="number"] {
-            width: 55px;
+            width: 50px;
             padding: 3px 5px;
             border: 1px solid #ababab;
             border-radius: 2px;
             outline: none;
             font-size: 0.85rem;
+            font-family: monospace;
         }
 
         input[type="color"] {
@@ -76,6 +99,19 @@
             border-radius: 2px;
             cursor: pointer;
             background: none;
+        }
+
+        /* Timer Box Display */
+        .timer-display {
+            font-weight: bold;
+            font-size: 1rem;
+            font-family: monospace;
+            background: #ffffff;
+            padding: 2px 8px;
+            border: 1px solid #ababab;
+            border-radius: 2px;
+            min-width: 60px;
+            text-align: center;
         }
 
         /* Editor Area */
@@ -96,6 +132,20 @@
             line-height: 1.5;
             background-color: #ffffff;
             color: #000000;
+            transition: background-color 0.2s;
+        }
+
+        /* Efek Latar Kedap-Kedip saat Waktu Habis */
+        @keyframes flashing-bg {
+            0% { background-color: #ff0000; color: #ffffff; }
+            25% { background-color: #ffff00; color: #000000; }
+            50% { background-color: #00ff00; color: #000000; }
+            75% { background-color: #00ffff; color: #000000; }
+            100% { background-color: #ff00ff; color: #ffffff; }
+        }
+
+        textarea.time-up {
+            animation: flashing-bg 0.4s infinite alternate !important;
         }
 
         /* Status Bar Bottom */
@@ -112,9 +162,7 @@
 </head>
 <body>
 
-    <!-- Menu Bar -->
     <div class="menu-bar">
-        <!-- Opsi File -->
         <div class="menu-group">
             <button class="btn" onclick="newFile()">File Baru</button>
             <button class="btn" onclick="document.getElementById('fileInput').click()">Buka File</button>
@@ -122,31 +170,38 @@
             <input type="file" id="fileInput" style="display: none;" accept=".txt" onchange="openFile(event)">
         </div>
 
-        <!-- Pengaturan Tampilan -->
         <div class="menu-group">
             <div class="control-item">
-                <label for="fontSize">Ukuran Font:</label>
+                <label for="fontSize">Ukuran:</label>
                 <input type="number" id="fontSize" value="16" min="10" max="72">
             </div>
 
             <div class="control-item">
-                <label for="textColor">Warna Font:</label>
+                <label for="textColor">Font:</label>
                 <input type="color" id="textColor" value="#000000">
             </div>
 
             <div class="control-item">
-                <label for="bgColor">Warna Kertas:</label>
+                <label for="bgColor">Kertas:</label>
                 <input type="color" id="bgColor" value="#ffffff">
             </div>
         </div>
+
+        <div class="menu-group">
+            <div class="control-item">
+                <label>Timer:</label>
+                <input type="number" id="timerMins" value="1" min="0" max="180" placeholder="m">m
+                <input type="number" id="timerSecs" value="0" min="0" max="59" placeholder="s">s
+            </div>
+            <div class="timer-display" id="timerDisplay">01:00</div>
+            <button class="btn btn-start" id="timerBtn" onclick="toggleTimer()">Start</button>
+        </div>
     </div>
 
-    <!-- Text Area -->
     <div class="editor-container">
         <textarea id="notepad" placeholder="Mulai mengetik di sini..." oninput="updateStats()"></textarea>
     </div>
 
-    <!-- Status Bar -->
     <div class="status-bar">
         <span id="autoSaveStatus">Tersimpan otomatis</span>
         <span id="stats">Karakter: 0 | Kata: 0</span>
@@ -160,6 +215,15 @@
         const fontSizeInput = document.getElementById('fontSize');
         const textColorInput = document.getElementById('textColor');
         const bgColorInput = document.getElementById('bgColor');
+
+        const timerMinsInput = document.getElementById('timerMins');
+        const timerSecsInput = document.getElementById('timerSecs');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerBtn = document.getElementById('timerBtn');
+
+        let timerInterval = null;
+        let totalSeconds = 0;
+        let isTimerRunning = false;
 
         // Memuat teks & pengaturan dari LocalStorage saat web dibuka
         window.onload = function() {
@@ -177,39 +241,134 @@
 
             applyStyles();
             updateStats();
+            initTimerDisplay();
         };
 
-        // Fungsi mengubah gaya tampilan textarea
+        // Mengubah gaya tampilan textarea
         function applyStyles() {
-            const fontSize = fontSizeInput.value + 'px';
-            const textColor = textColorInput.value;
-            const bgColor = bgColorInput.value;
+            notepad.style.fontSize = fontSizeInput.value + 'px';
+            notepad.style.color = textColorInput.value;
+            notepad.style.backgroundColor = bgColorInput.value;
 
-            notepad.style.fontSize = fontSize;
-            notepad.style.color = textColor;
-            notepad.style.backgroundColor = bgColor;
-
-            // Simpan pengaturan tampilan ke browser
             localStorage.setItem('webNotepadFontSize', fontSizeInput.value);
-            localStorage.setItem('webNotepadTextColor', textColor);
-            localStorage.setItem('webNotepadBgColor', bgColor);
+            localStorage.setItem('webNotepadTextColor', textColorInput.value);
+            localStorage.setItem('webNotepadBgColor', bgColorInput.value);
         }
 
-        // Event Listener Pengaturan
         fontSizeInput.addEventListener('input', applyStyles);
         textColorInput.addEventListener('input', applyStyles);
         bgColorInput.addEventListener('input', applyStyles);
 
-        // Update jumlah kata, karakter, dan simpan teks otomatis
+        // Update jumlah kata & karakter
         function updateStats() {
             const text = notepad.value;
             const charCount = text.length;
             const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
 
             stats.textContent = `Karakter: ${charCount} | Kata: ${wordCount}`;
-            
             localStorage.setItem('webNotepadText', text);
             autoSaveStatus.textContent = "Tersimpan otomatis";
+
+            // Hentikan efek kedap-kedip jika pengguna mulai mengetik/mengeklik lembar kerja
+            if (notepad.classList.contains('time-up')) {
+                resetFlashing();
+            }
+        }
+
+        // Setup Tampilan Awal Timer
+        function initTimerDisplay() {
+            if (!isTimerRunning) {
+                const m = parseInt(timerMinsInput.value) || 0;
+                const s = parseInt(timerSecsInput.value) || 0;
+                totalSeconds = (m * 60) + s;
+                formatTimerDisplay(totalSeconds);
+            }
+        }
+
+        function formatTimerDisplay(secs) {
+            const m = Math.floor(secs / 60);
+            const s = secs % 60;
+            timerDisplay.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        timerMinsInput.addEventListener('change', initTimerDisplay);
+        timerSecsInput.addEventListener('change', initTimerDisplay);
+
+        // Toggle Start/Stop Timer
+        function toggleTimer() {
+            if (isTimerRunning) {
+                stopTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            resetFlashing();
+            
+            if (totalSeconds <= 0) {
+                initTimerDisplay();
+            }
+
+            if (totalSeconds <= 0) return;
+
+            isTimerRunning = true;
+            timerBtn.textContent = 'Stop';
+            timerBtn.classList.remove('btn-start');
+            timerBtn.classList.add('btn-stop');
+
+            timerInterval = setInterval(() => {
+                totalSeconds--;
+                formatTimerDisplay(totalSeconds);
+
+                if (totalSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    timerBtn.textContent = 'Start';
+                    timerBtn.classList.remove('btn-stop');
+                    timerBtn.classList.add('btn-start');
+
+                    // Memicu efek kedap-kedip warna latar
+                    notepad.classList.add('time-up');
+                    playBeepSound();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerBtn.textContent = 'Start';
+            timerBtn.classList.remove('btn-stop');
+            timerBtn.classList.add('btn-start');
+            resetFlashing();
+            initTimerDisplay();
+        }
+
+        function resetFlashing() {
+            notepad.classList.remove('time-up');
+            applyStyles(); // Kembalikan ke warna asli
+        }
+
+        // Bunyi Alarm Sederhana dari Web Audio API
+        function playBeepSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880Hz (A5)
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.5); // Berbunyi 1.5 detik
+            } catch (e) {
+                console.log("Audio not allowed without user interaction.");
+            }
         }
 
         // Buat Dokumen Baru
@@ -222,7 +381,7 @@
             }
         }
 
-        // Simpan / Unduh Teks sebagai file .txt
+        // Unduh Teks sebagai file .txt
         function downloadFile() {
             const text = notepad.value;
             const blob = new Blob([text], { type: 'text/plain' });
