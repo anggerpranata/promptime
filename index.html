@@ -47,7 +47,7 @@
             color: #000;
         }
 
-        /* Top Control Bar */
+        /* Top Control Bar for Editor */
         .control-bar {
             background-color: #ffffff;
             border-bottom: 1px solid #dcdcdc;
@@ -90,15 +90,16 @@
         .btn-stop { background-color: #d9534f; color: white; border-color: #d43f3a; }
         .btn-stop:hover { background-color: #c9302c; }
 
-        input[type="number"] {
-            width: 50px;
-            padding: 3px 5px;
+        input[type="number"], input[type="text"] {
+            padding: 3px 6px;
             border: 1px solid #ababab;
             border-radius: 2px;
             outline: none;
             font-size: 0.85rem;
             font-family: monospace;
         }
+
+        input[type="number"] { width: 55px; }
 
         input[type="color"] {
             width: 28px;
@@ -133,20 +134,6 @@
             line-height: 1.5;
             background-color: #ffffff;
             color: #000000;
-            transition: background-color 0.2s;
-        }
-
-        /* Flashing animation on time's up */
-        @keyframes flashing-bg {
-            0% { background-color: #ff0000; color: #ffffff; }
-            25% { background-color: #ffff00; color: #000000; }
-            50% { background-color: #00ff00; color: #000000; }
-            75% { background-color: #00ffff; color: #000000; }
-            100% { background-color: #ff00ff; color: #ffffff; }
-        }
-
-        textarea.time-up {
-            animation: flashing-bg 0.4s infinite alternate !important;
         }
 
         /* Tab 2: Timer Window */
@@ -158,31 +145,53 @@
             justify-content: center;
             background-color: #f9f9f9;
             gap: 20px;
+            padding: 20px;
+            transition: background-color 0.2s;
+        }
+
+        .timer-display-box {
+            text-align: center;
+            word-break: break-word;
+            max-width: 90%;
         }
 
         .large-timer-display {
             font-size: 5rem;
             font-family: monospace;
             font-weight: bold;
-            background: #ffffff;
-            padding: 10px 30px;
-            border: 2px solid #ababab;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            line-height: 1.2;
         }
 
-        .timer-controls-large {
+        /* Flashing Animation when Time's Up */
+        @keyframes flashing-timer-bg {
+            0% { background-color: #ff0000; color: #ffffff; }
+            25% { background-color: #ffff00; color: #000000; }
+            50% { background-color: #00ff00; color: #000000; }
+            75% { background-color: #00ffff; color: #000000; }
+            100% { background-color: #ff00ff; color: #ffffff; }
+        }
+
+        .timer-window.time-up {
+            animation: flashing-timer-bg 0.4s infinite alternate !important;
+        }
+
+        .timer-settings-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #ffffff;
+            padding: 15px 20px;
+            border: 1px solid #ababab;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .settings-row {
             display: flex;
             align-items: center;
             gap: 15px;
-            font-size: 1.1rem;
-        }
-
-        .timer-controls-large input {
-            width: 70px;
-            font-size: 1.2rem;
-            padding: 5px;
-            text-align: center;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
         }
 
         /* Status Bar Bottom */
@@ -235,17 +244,29 @@
     </div>
 
     <div id="timerTab" class="tab-content">
-        <div class="timer-window">
-            <div class="large-timer-display" id="largeTimerDisplay">01:00</div>
-            
-            <div class="timer-controls-large">
-                <label>Set Timer:</label>
-                <input type="number" id="timerMins" value="1" min="0" max="180"> Menit
-                <input type="number" id="timerSecs" value="0" min="0" max="59"> Detik
+        <div class="timer-window" id="timerWindow" onclick="resetTimerFlashing()">
+            <div class="timer-display-box">
+                <div class="large-timer-display" id="largeTimerDisplay">01:00</div>
             </div>
+            
+            <div class="timer-settings-panel">
+                <div class="settings-row">
+                    <label>Durasi Timer:</label>
+                    <input type="number" id="timerMins" value="1" min="0" max="180"> m
+                    <input type="number" id="timerSecs" value="0" min="0" max="59"> s
+                    
+                    <label style="margin-left: 10px;">Ukuran Font Timer:</label>
+                    <input type="number" id="timerFontSize" value="80" min="20" max="250"> px
+                </div>
 
-            <div>
-                <button class="btn btn-start" id="timerBtn" style="font-size: 1.2rem; padding: 8px 24px;" onclick="toggleTimer()">Start Countdown</button>
+                <div class="settings-row">
+                    <label for="alertMessage">Pesan Waktu Habis:</label>
+                    <input type="text" id="alertMessage" value="WAKTU HABIS!" style="flex: 1; min-width: 200px;">
+                </div>
+
+                <div class="settings-row" style="justify-content: center; margin-top: 5px;">
+                    <button class="btn btn-start" id="timerBtn" style="font-size: 1rem; padding: 6px 20px;" onclick="toggleTimer()">Start Countdown</button>
+                </div>
             </div>
         </div>
     </div>
@@ -264,8 +285,11 @@
         const textColorInput = document.getElementById('textColor');
         const bgColorInput = document.getElementById('bgColor');
 
+        const timerWindow = document.getElementById('timerWindow');
         const timerMinsInput = document.getElementById('timerMins');
         const timerSecsInput = document.getElementById('timerSecs');
+        const timerFontSizeInput = document.getElementById('timerFontSize');
+        const alertMessageInput = document.getElementById('alertMessage');
         const largeTimerDisplay = document.getElementById('largeTimerDisplay');
         const timerBtn = document.getElementById('timerBtn');
 
@@ -281,7 +305,6 @@
             document.getElementById(tabId).classList.add('active');
             btnElement.classList.add('active');
 
-            // Hide/Show Top Editor Controls
             if (tabId === 'editorTab') {
                 document.getElementById('editorControls').style.display = 'flex';
             } else {
@@ -305,10 +328,11 @@
 
             applyStyles();
             updateStats();
+            updateTimerFontSize();
             initTimerDisplay();
         };
 
-        // Style Applicator
+        // Editor Styles
         function applyStyles() {
             notepad.style.fontSize = fontSizeInput.value + 'px';
             notepad.style.color = textColorInput.value;
@@ -331,13 +355,15 @@
             stats.textContent = `Karakter: ${charCount} | Kata: ${wordCount}`;
             localStorage.setItem('webNotepadText', text);
             autoSaveStatus.textContent = "Tersimpan otomatis";
-
-            if (notepad.classList.contains('time-up')) {
-                resetFlashing();
-            }
         }
 
-        // Timer Logic
+        // Adjust Timer Font Size
+        function updateTimerFontSize() {
+            largeTimerDisplay.style.fontSize = timerFontSizeInput.value + 'px';
+        }
+        timerFontSizeInput.addEventListener('input', updateTimerFontSize);
+
+        // Timer Functionality
         function initTimerDisplay() {
             if (!isTimerRunning) {
                 const m = parseInt(timerMinsInput.value) || 0;
@@ -365,7 +391,7 @@
         }
 
         function startTimer() {
-            resetFlashing();
+            resetTimerFlashing();
             if (totalSeconds <= 0) initTimerDisplay();
             if (totalSeconds <= 0) return;
 
@@ -385,9 +411,10 @@
                     timerBtn.classList.remove('btn-stop');
                     timerBtn.classList.add('btn-start');
 
-                    // Switch back to editor tab and start flashing
-                    switchTab('editorTab', document.querySelectorAll('.tab-btn')[0]);
-                    notepad.classList.add('time-up');
+                    // Tampilkan pesan kustom dan jalankan efek kedap-kedip
+                    const customMsg = alertMessageInput.value.trim() || 'WAKTU HABIS!';
+                    largeTimerDisplay.textContent = customMsg;
+                    timerWindow.classList.add('time-up');
                     playBeepSound();
                 }
             }, 1000);
@@ -399,13 +426,15 @@
             timerBtn.textContent = 'Start Countdown';
             timerBtn.classList.remove('btn-stop');
             timerBtn.classList.add('btn-start');
-            resetFlashing();
+            resetTimerFlashing();
             initTimerDisplay();
         }
 
-        function resetFlashing() {
-            notepad.classList.remove('time-up');
-            applyStyles();
+        function resetTimerFlashing() {
+            if (timerWindow.classList.contains('time-up')) {
+                timerWindow.classList.remove('time-up');
+                initTimerDisplay();
+            }
         }
 
         function playBeepSound() {
