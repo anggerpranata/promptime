@@ -108,6 +108,11 @@
             background-color: #e07b00;
         }
 
+        .btn-alert.active {
+            background-color: #d9534f;
+            border-color: #d43f3a;
+        }
+
         .btn-start { background-color: #008cba; color: white; border-color: #007399; }
         .btn-start:hover { background-color: #007399; }
         .btn-stop { background-color: #d9534f; color: white; border-color: #d43f3a; }
@@ -226,12 +231,7 @@
                 <button class="btn" onclick="downloadFile()">Simpan (.txt)</button>
                 <input type="file" id="fileInput" style="display: none;" accept=".txt" onchange="openFile(event)">
                 
-                <button class="btn btn-alert" id="lightAlertBtn" 
-                        onmousedown="startFlashLight()" 
-                        onmouseup="stopFlashLight()" 
-                        onmouseleave="stopFlashLight()"
-                        ontouchstart="startFlashLight()" 
-                        ontouchend="stopFlashLight()">💡 Lampu Peringatan</button>
+                <button class="btn btn-alert" id="lightAlertBtn" onclick="toggleFlashLight()">💡 Lampu Peringatan: OFF</button>
             </div>
 
             <div class="menu-group">
@@ -336,10 +336,12 @@
         const alertMessageInput = document.getElementById('alertMessage');
         const largeTimerDisplay = document.getElementById('largeTimerDisplay');
         const timerBtn = document.getElementById('timerBtn');
+        const lightAlertBtn = document.getElementById('lightAlertBtn');
 
         let timerInterval = null;
         let totalSeconds = 0;
         let isTimerRunning = false;
+        let isFlashingActive = false;
         let currentAlign = 'left';
 
         // Switch Tabs
@@ -415,16 +417,24 @@
             autoSaveStatus.textContent = "Tersimpan otomatis";
         }
 
-        // Lampu Peringatan Kedap-Kedip pada Jendela Ketik
-        function startFlashLight() {
-            notepad.style.setProperty('--flash-color-1', flashColor1Input.value);
-            notepad.style.setProperty('--flash-color-2', flashColor2Input.value);
-            notepad.classList.add('flashing-active');
-        }
+        // Sakelar Lampu Peringatan (Toggle On/Off 1x Klik)
+        function toggleFlashLight() {
+            isFlashingActive = !isFlashingActive;
 
-        function stopFlashLight() {
-            notepad.classList.remove('flashing-active');
-            applyStyles();
+            if (isFlashingActive) {
+                notepad.style.setProperty('--flash-color-1', flashColor1Input.value);
+                notepad.style.setProperty('--flash-color-2', flashColor2Input.value);
+                notepad.classList.add('flashing-active');
+                
+                lightAlertBtn.textContent = '💡 Lampu Peringatan: ON';
+                lightAlertBtn.classList.add('active');
+            } else {
+                notepad.classList.remove('flashing-active');
+                applyStyles();
+
+                lightAlertBtn.textContent = '💡 Lampu Peringatan: OFF';
+                lightAlertBtn.classList.remove('active');
+            }
         }
 
         // Timer Styles & Custom Flash Colors
