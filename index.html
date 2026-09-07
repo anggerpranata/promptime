@@ -161,6 +161,7 @@
             resize: none;
             font-size: 16px;
             line-height: 1.5;
+            letter-spacing: 0px;
             background-color: #ffffff;
             color: #000000;
             text-align: left;
@@ -240,6 +241,16 @@
                     <button class="btn btn-align active" id="alignLeft" onclick="setTextAlign('left')">⬅ Left</button>
                     <button class="btn btn-align" id="alignCenter" onclick="setTextAlign('center')">↔ Center</button>
                     <button class="btn btn-align" id="alignRight" onclick="setTextAlign('right')">➡ Right</button>
+                </div>
+
+                <div class="control-item">
+                    <label for="letterSpacing">Spasi Huruf:</label>
+                    <input type="number" id="letterSpacing" value="0" min="-2" max="20" style="width: 45px;"> px
+                </div>
+
+                <div class="control-item">
+                    <label for="lineHeight">Jarak Baris:</label>
+                    <input type="number" id="lineHeight" value="1.5" min="0.8" max="4" step="0.1" style="width: 50px;">
                 </div>
 
                 <div class="control-item">
@@ -324,6 +335,8 @@
         const fontSizeInput = document.getElementById('fontSize');
         const textColorInput = document.getElementById('textColor');
         const bgColorInput = document.getElementById('bgColor');
+        const letterSpacingInput = document.getElementById('letterSpacing');
+        const lineHeightInput = document.getElementById('lineHeight');
 
         const timerWindow = document.getElementById('timerWindow');
         const timerMinsInput = document.getElementById('timerMins');
@@ -367,6 +380,12 @@
             const savedBgColor = localStorage.getItem('webNotepadBgColor');
             if (savedBgColor) bgColorInput.value = savedBgColor;
 
+            const savedSpacing = localStorage.getItem('webNotepadLetterSpacing');
+            if (savedSpacing !== null) letterSpacingInput.value = savedSpacing;
+
+            const savedLineHeight = localStorage.getItem('webNotepadLineHeight');
+            if (savedLineHeight !== null) lineHeightInput.value = savedLineHeight;
+
             const savedAlign = localStorage.getItem('webNotepadAlign');
             if (savedAlign) setTextAlign(savedAlign);
 
@@ -397,15 +416,21 @@
             notepad.style.fontSize = fontSizeInput.value + 'px';
             notepad.style.color = textColorInput.value;
             notepad.style.backgroundColor = bgColorInput.value;
+            notepad.style.letterSpacing = letterSpacingInput.value + 'px';
+            notepad.style.lineHeight = lineHeightInput.value;
 
             localStorage.setItem('webNotepadFontSize', fontSizeInput.value);
             localStorage.setItem('webNotepadTextColor', textColorInput.value);
             localStorage.setItem('webNotepadBgColor', bgColorInput.value);
+            localStorage.setItem('webNotepadLetterSpacing', letterSpacingInput.value);
+            localStorage.setItem('webNotepadLineHeight', lineHeightInput.value);
         }
 
         fontSizeInput.addEventListener('input', applyStyles);
         textColorInput.addEventListener('input', applyStyles);
         bgColorInput.addEventListener('input', applyStyles);
+        letterSpacingInput.addEventListener('input', applyStyles);
+        lineHeightInput.addEventListener('input', applyStyles);
 
         function updateStats() {
             const text = notepad.value;
