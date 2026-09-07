@@ -3,76 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Prompter & Countdown Timer</title>
+    <title>Notepad Web</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; flex-direction: column; height: 100vh; background-color: #f3f2f1; color: #333; overflow: hidden; }
-
-        /* MS Word Top Header */
-        .office-header { background: #2b579a; color: white; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; font-weight: 600; }
-
-        /* MS Word Ribbon Toolbar */
-        .ribbon { background: #ffffff; border-bottom: 1px solid #d1d1d1; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .ribbon-section { display: flex; align-items: center; gap: 15px; }
-
-        .control-item { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #444; }
-        
-        /* Ribbon Inputs & Color Pickers */
-        input[type="number"] { width: 60px; padding: 4px 6px; border: 1px solid #ababab; border-radius: 2px; outline: none; font-size: 0.85rem; }
-        input[type="color"] { width: 32px; height: 28px; border: 1px solid #ababab; border-radius: 2px; cursor: pointer; background: none; }
-
-        /* Timer Badge */
-        .timer-box { display: flex; align-items: center; gap: 8px; background: #e1dfdd; padding: 4px 10px; border-radius: 3px; font-weight: bold; font-family: monospace; font-size: 1.1rem; }
-        .timer-box input[type="number"] { width: 45px; text-align: center; font-family: monospace; }
-
-        /* Action Button */
-        .btn { background: #2b579a; color: white; border: none; padding: 6px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-radius: 2px; }
-        .btn:hover { background: #1f3d6d; }
-        .btn-stop { background: #a80000; }
-        .btn-stop:hover { background: #780000; }
-
-        /* Main Workspace Area */
-        .workspace { flex: 1; display: flex; justify-content: center; background: #e5e5e5; padding: 20px; overflow-y: auto; position: relative; }
-        
-        /* MS Word Document Page Style */
-        .document-page { 
-            width: 100%; 
-            max-width: 800px; 
-            min-height: 100%; 
-            background: #ffffff; 
-            color: #000000; 
-            padding: 50px; 
-            border: 1px solid #d1d1d1; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
-            outline: none; 
-            resize: none; 
-            font-size: 32px; 
-            line-height: 1.6; 
-            white-space: pre-wrap; 
-            word-wrap: break-word; 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
         }
 
-        /* Mode Prompter / Auto Scroll */
-        .workspace.prompter-active { overflow-y: scroll; scroll-behavior: auto; padding: 40vh 0 50vh 0; }
-        .workspace.prompter-active::-webkit-scrollbar { display: none; }
-        .workspace.prompter-active .document-page { cursor: default; }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f0f0f0;
+            color: #000000;
+        }
 
-        /* Focus Line Badge */
-        .timer-badge { display: none; position: fixed; top: 70px; right: 20px; background: rgba(0,0,0,0.85); color: #00ff88; padding: 8px 16px; border-radius: 4px; font-family: monospace; font-size: 1.5rem; font-weight: bold; z-index: 100; border: 1px solid #444; }
+        /* Top Menu Bar */
+        .menu-bar {
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #dcdcdc;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .menu-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #333;
+        }
+
+        .btn {
+            background-color: #ffffff;
+            border: 1px solid #ababab;
+            padding: 4px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        .btn:hover {
+            background-color: #e5e5e5;
+        }
+
+        /* Input Controls */
+        input[type="number"] {
+            width: 55px;
+            padding: 3px 5px;
+            border: 1px solid #ababab;
+            border-radius: 2px;
+            outline: none;
+            font-size: 0.85rem;
+        }
+
+        input[type="color"] {
+            width: 28px;
+            height: 26px;
+            border: 1px solid #ababab;
+            border-radius: 2px;
+            cursor: pointer;
+            background: none;
+        }
+
+        /* Editor Area */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 16px;
+            line-height: 1.5;
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        /* Status Bar Bottom */
+        .status-bar {
+            background-color: #f0f0f0;
+            border-top: 1px solid #dcdcdc;
+            padding: 4px 15px;
+            font-size: 0.8rem;
+            color: #555555;
+            display: flex;
+            justify-content: space-between;
+        }
     </style>
 </head>
 <body>
 
-    <div class="office-header">
-        <span>Document - Microsoft Word Prompter</span>
-        <span style="font-size: 0.8rem; font-weight: normal;">Tekan [Spasi] untuk Jalankan / Pause Prompter</span>
-    </div>
+    <!-- Menu Bar -->
+    <div class="menu-bar">
+        <!-- Opsi File -->
+        <div class="menu-group">
+            <button class="btn" onclick="newFile()">File Baru</button>
+            <button class="btn" onclick="document.getElementById('fileInput').click()">Buka File</button>
+            <button class="btn" onclick="downloadFile()">Simpan (.txt)</button>
+            <input type="file" id="fileInput" style="display: none;" accept=".txt" onchange="openFile(event)">
+        </div>
 
-    <div class="ribbon">
-        <div class="ribbon-section">
+        <!-- Pengaturan Tampilan -->
+        <div class="menu-group">
             <div class="control-item">
                 <label for="fontSize">Ukuran Font:</label>
-                <input type="number" id="fontSize" value="32" min="12" max="150">
+                <input type="number" id="fontSize" value="16" min="10" max="72">
             </div>
 
             <div class="control-item">
@@ -85,128 +139,112 @@
                 <input type="color" id="bgColor" value="#ffffff">
             </div>
         </div>
-
-        <div class="ribbon-section">
-            <div class="timer-box">
-                <label>Timer:</label>
-                <input type="number" id="timerMins" value="5" min="0" max="180">m
-                <input type="number" id="timerSecs" value="0" min="0" max="59">s
-            </div>
-
-            <button id="actionBtn" class="btn">▶ Jalankan Prompter</button>
-        </div>
     </div>
 
-    <div class="timer-badge" id="timerBadge">05:00</div>
+    <!-- Text Area -->
+    <div class="editor-container">
+        <textarea id="notepad" placeholder="Mulai mengetik di sini..." oninput="updateStats()"></textarea>
+    </div>
 
-    <div class="workspace" id="workspace">
-        <textarea class="document-page" id="docText" placeholder="Ketik naskah Anda di sini..."></textarea>
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span id="autoSaveStatus">Tersimpan otomatis</span>
+        <span id="stats">Karakter: 0 | Kata: 0</span>
     </div>
 
     <script>
-        const docText = document.getElementById('docText');
-        const workspace = document.getElementById('workspace');
+        const notepad = document.getElementById('notepad');
+        const stats = document.getElementById('stats');
+        const autoSaveStatus = document.getElementById('autoSaveStatus');
+        
         const fontSizeInput = document.getElementById('fontSize');
         const textColorInput = document.getElementById('textColor');
         const bgColorInput = document.getElementById('bgColor');
-        
-        const timerMinsInput = document.getElementById('timerMins');
-        const timerSecsInput = document.getElementById('timerSecs');
-        const timerBadge = document.getElementById('timerBadge');
-        const actionBtn = document.getElementById('actionBtn');
 
-        let isRunning = false;
-        let scrollInterval = null;
-        let timerInterval = null;
-        let totalSeconds = 0;
+        // Memuat teks & pengaturan dari LocalStorage saat web dibuka
+        window.onload = function() {
+            const savedText = localStorage.getItem('webNotepadText');
+            if (savedText !== null) notepad.value = savedText;
 
-        // Terapkan Pengaturan Warna dan Ukuran Font secara Langsung
-        function updateStyle() {
-            docText.style.fontSize = fontSizeInput.value + 'px';
-            docText.style.color = textColorInput.value;
-            docText.style.backgroundColor = bgColorInput.value;
+            const savedFontSize = localStorage.getItem('webNotepadFontSize');
+            if (savedFontSize) fontSizeInput.value = savedFontSize;
+
+            const savedTextColor = localStorage.getItem('webNotepadTextColor');
+            if (savedTextColor) textColorInput.value = savedTextColor;
+
+            const savedBgColor = localStorage.getItem('webNotepadBgColor');
+            if (savedBgColor) bgColorInput.value = savedBgColor;
+
+            applyStyles();
+            updateStats();
+        };
+
+        // Fungsi mengubah gaya tampilan textarea
+        function applyStyles() {
+            const fontSize = fontSizeInput.value + 'px';
+            const textColor = textColorInput.value;
+            const bgColor = bgColorInput.value;
+
+            notepad.style.fontSize = fontSize;
+            notepad.style.color = textColor;
+            notepad.style.backgroundColor = bgColor;
+
+            // Simpan pengaturan tampilan ke browser
+            localStorage.setItem('webNotepadFontSize', fontSizeInput.value);
+            localStorage.setItem('webNotepadTextColor', textColor);
+            localStorage.setItem('webNotepadBgColor', bgColor);
         }
 
-        fontSizeInput.addEventListener('input', updateStyle);
-        textColorInput.addEventListener('input', updateStyle);
-        bgColorInput.addEventListener('input', updateStyle);
-        updateStyle();
+        // Event Listener Pengaturan
+        fontSizeInput.addEventListener('input', applyStyles);
+        textColorInput.addEventListener('input', applyStyles);
+        bgColorInput.addEventListener('input', applyStyles);
 
-        // Format Waktu Display
-        function updateTimerDisplay(secs) {
-            const m = Math.floor(secs / 60);
-            const s = secs % 60;
-            const formatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-            timerBadge.textContent = formatted;
+        // Update jumlah kata, karakter, dan simpan teks otomatis
+        function updateStats() {
+            const text = notepad.value;
+            const charCount = text.length;
+            const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+
+            stats.textContent = `Karakter: ${charCount} | Kata: ${wordCount}`;
+            
+            localStorage.setItem('webNotepadText', text);
+            autoSaveStatus.textContent = "Tersimpan otomatis";
         }
 
-        // Jalankan / Pause Prompter
-        function togglePrompter() {
-            if (isRunning) {
-                stopPrompter();
-            } else {
-                startPrompter();
-            }
-        }
-
-        function startPrompter() {
-            if (!docText.value.trim()) return;
-
-            isRunning = true;
-            actionBtn.textContent = '⏸ Pause';
-            actionBtn.classList.add('btn-stop');
-
-            // Ubah tampilan workspace ke mode prompter
-            workspace.classList.add('prompter-active');
-            docText.readOnly = true;
-            timerBadge.style.display = 'block';
-
-            // Hitung total waktu countdown
-            if (totalSeconds <= 0) {
-                const mins = parseInt(timerMinsInput.value) || 0;
-                const secs = parseInt(timerSecsInput.value) || 0;
-                totalSeconds = (mins * 60) + secs;
-            }
-            updateTimerDisplay(totalSeconds);
-
-            // Auto Scroll Text
-            scrollInterval = setInterval(() => {
-                workspace.scrollTop += 1;
-            }, 25);
-
-            // Countdown Timer
-            timerInterval = setInterval(() => {
-                if (totalSeconds > 0) {
-                    totalSeconds--;
-                    updateTimerDisplay(totalSeconds);
-                } else {
-                    stopPrompter();
-                    alert('Waktu Countdown Habis!');
+        // Buat Dokumen Baru
+        function newFile() {
+            if (notepad.value.trim() !== "") {
+                if (confirm("Apakah Anda yakin ingin membuat catatan baru?")) {
+                    notepad.value = "";
+                    updateStats();
                 }
-            }, 1000);
-        }
-
-        function stopPrompter() {
-            isRunning = false;
-            actionBtn.textContent = '▶ Jalankan Prompter';
-            actionBtn.classList.remove('btn-stop');
-
-            clearInterval(scrollInterval);
-            clearInterval(timerInterval);
-
-            workspace.classList.remove('prompter-active');
-            docText.readOnly = false;
-        }
-
-        actionBtn.addEventListener('click', togglePrompter);
-
-        // Shortcut Keyboard: Tombol Spasi untuk Start/Pause
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && document.activeElement !== docText) {
-                e.preventDefault();
-                togglePrompter();
             }
-        });
+        }
+
+        // Simpan / Unduh Teks sebagai file .txt
+        function downloadFile() {
+            const text = notepad.value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const anchor = document.createElement('a');
+            anchor.download = 'Catatan.txt';
+            anchor.href = window.URL.createObjectURL(blob);
+            anchor.click();
+            window.URL.revokeObjectURL(anchor.href);
+        }
+
+        // Buka File .txt dari Komputer
+        function openFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                notepad.value = e.target.result;
+                updateStats();
+            };
+            reader.readAsText(file);
+        }
     </script>
 </body>
 </html>
