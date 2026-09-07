@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notepad Web dengan Timer</title>
+    <title>Notepad & Timer Studio</title>
     <style>
         * {
             box-sizing: border-box;
@@ -20,9 +20,36 @@
             color: #000000;
         }
 
-        /* Top Menu Bar */
-        .menu-bar {
-            background-color: #f0f0f0;
+        /* Top Navigation Tabs */
+        .tab-bar {
+            background-color: #e1dfdd;
+            border-bottom: 1px solid #dcdcdc;
+            display: flex;
+            padding-left: 10px;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            background-color: #d1d1d1;
+            border: 1px solid #ababab;
+            border-bottom: none;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .tab-btn.active {
+            background-color: #ffffff;
+            border-top: 2px solid #008cba;
+            color: #000;
+        }
+
+        /* Top Control Bar */
+        .control-bar {
+            background-color: #ffffff;
             border-bottom: 1px solid #dcdcdc;
             padding: 8px 12px;
             display: flex;
@@ -57,31 +84,12 @@
             font-weight: 600;
         }
 
-        .btn:hover {
-            background-color: #e5e5e5;
-        }
+        .btn:hover { background-color: #e5e5e5; }
+        .btn-start { background-color: #008cba; color: white; border-color: #007399; }
+        .btn-start:hover { background-color: #007399; }
+        .btn-stop { background-color: #d9534f; color: white; border-color: #d43f3a; }
+        .btn-stop:hover { background-color: #c9302c; }
 
-        .btn-start {
-            background-color: #008cba;
-            color: white;
-            border-color: #007399;
-        }
-
-        .btn-start:hover {
-            background-color: #007399;
-        }
-
-        .btn-stop {
-            background-color: #d9534f;
-            color: white;
-            border-color: #d43f3a;
-        }
-
-        .btn-stop:hover {
-            background-color: #c9302c;
-        }
-
-        /* Input Controls */
         input[type="number"] {
             width: 50px;
             padding: 3px 5px;
@@ -101,30 +109,23 @@
             background: none;
         }
 
-        /* Timer Box Display */
-        .timer-display {
-            font-weight: bold;
-            font-size: 1rem;
-            font-family: monospace;
-            background: #ffffff;
-            padding: 2px 8px;
-            border: 1px solid #ababab;
-            border-radius: 2px;
-            min-width: 60px;
-            text-align: center;
-        }
-
-        /* Editor Area */
-        .editor-container {
+        /* Tab Content Area */
+        .tab-content {
             flex: 1;
-            display: flex;
+            display: none;
             overflow: hidden;
+            position: relative;
         }
 
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Tab 1: Editor Window */
         textarea {
             width: 100%;
             height: 100%;
-            padding: 15px;
+            padding: 20px;
             border: none;
             outline: none;
             resize: none;
@@ -135,7 +136,7 @@
             transition: background-color 0.2s;
         }
 
-        /* Efek Latar Kedap-Kedip saat Waktu Habis */
+        /* Flashing animation on time's up */
         @keyframes flashing-bg {
             0% { background-color: #ff0000; color: #ffffff; }
             25% { background-color: #ffff00; color: #000000; }
@@ -146,6 +147,42 @@
 
         textarea.time-up {
             animation: flashing-bg 0.4s infinite alternate !important;
+        }
+
+        /* Tab 2: Timer Window */
+        .timer-window {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9f9f9;
+            gap: 20px;
+        }
+
+        .large-timer-display {
+            font-size: 5rem;
+            font-family: monospace;
+            font-weight: bold;
+            background: #ffffff;
+            padding: 10px 30px;
+            border: 2px solid #ababab;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .timer-controls-large {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+        }
+
+        .timer-controls-large input {
+            width: 70px;
+            font-size: 1.2rem;
+            padding: 5px;
+            text-align: center;
         }
 
         /* Status Bar Bottom */
@@ -162,7 +199,12 @@
 </head>
 <body>
 
-    <div class="menu-bar">
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('editorTab', this)">📝 Jendela Ketik</button>
+        <button class="tab-btn" onclick="switchTab('timerTab', this)">⏱️ Jendela Timer</button>
+    </div>
+
+    <div class="control-bar" id="editorControls">
         <div class="menu-group">
             <button class="btn" onclick="newFile()">File Baru</button>
             <button class="btn" onclick="document.getElementById('fileInput').click()">Buka File</button>
@@ -186,20 +228,26 @@
                 <input type="color" id="bgColor" value="#ffffff">
             </div>
         </div>
-
-        <div class="menu-group">
-            <div class="control-item">
-                <label>Timer:</label>
-                <input type="number" id="timerMins" value="1" min="0" max="180" placeholder="m">m
-                <input type="number" id="timerSecs" value="0" min="0" max="59" placeholder="s">s
-            </div>
-            <div class="timer-display" id="timerDisplay">01:00</div>
-            <button class="btn btn-start" id="timerBtn" onclick="toggleTimer()">Start</button>
-        </div>
     </div>
 
-    <div class="editor-container">
+    <div id="editorTab" class="tab-content active">
         <textarea id="notepad" placeholder="Mulai mengetik di sini..." oninput="updateStats()"></textarea>
+    </div>
+
+    <div id="timerTab" class="tab-content">
+        <div class="timer-window">
+            <div class="large-timer-display" id="largeTimerDisplay">01:00</div>
+            
+            <div class="timer-controls-large">
+                <label>Set Timer:</label>
+                <input type="number" id="timerMins" value="1" min="0" max="180"> Menit
+                <input type="number" id="timerSecs" value="0" min="0" max="59"> Detik
+            </div>
+
+            <div>
+                <button class="btn btn-start" id="timerBtn" style="font-size: 1.2rem; padding: 8px 24px;" onclick="toggleTimer()">Start Countdown</button>
+            </div>
+        </div>
     </div>
 
     <div class="status-bar">
@@ -218,14 +266,30 @@
 
         const timerMinsInput = document.getElementById('timerMins');
         const timerSecsInput = document.getElementById('timerSecs');
-        const timerDisplay = document.getElementById('timerDisplay');
+        const largeTimerDisplay = document.getElementById('largeTimerDisplay');
         const timerBtn = document.getElementById('timerBtn');
 
         let timerInterval = null;
         let totalSeconds = 0;
         let isTimerRunning = false;
 
-        // Memuat teks & pengaturan dari LocalStorage saat web dibuka
+        // Switch Tabs
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+
+            // Hide/Show Top Editor Controls
+            if (tabId === 'editorTab') {
+                document.getElementById('editorControls').style.display = 'flex';
+            } else {
+                document.getElementById('editorControls').style.display = 'none';
+            }
+        }
+
+        // Init App
         window.onload = function() {
             const savedText = localStorage.getItem('webNotepadText');
             if (savedText !== null) notepad.value = savedText;
@@ -244,7 +308,7 @@
             initTimerDisplay();
         };
 
-        // Mengubah gaya tampilan textarea
+        // Style Applicator
         function applyStyles() {
             notepad.style.fontSize = fontSizeInput.value + 'px';
             notepad.style.color = textColorInput.value;
@@ -259,7 +323,6 @@
         textColorInput.addEventListener('input', applyStyles);
         bgColorInput.addEventListener('input', applyStyles);
 
-        // Update jumlah kata & karakter
         function updateStats() {
             const text = notepad.value;
             const charCount = text.length;
@@ -269,13 +332,12 @@
             localStorage.setItem('webNotepadText', text);
             autoSaveStatus.textContent = "Tersimpan otomatis";
 
-            // Hentikan efek kedap-kedip jika pengguna mulai mengetik/mengeklik lembar kerja
             if (notepad.classList.contains('time-up')) {
                 resetFlashing();
             }
         }
 
-        // Setup Tampilan Awal Timer
+        // Timer Logic
         function initTimerDisplay() {
             if (!isTimerRunning) {
                 const m = parseInt(timerMinsInput.value) || 0;
@@ -288,13 +350,12 @@
         function formatTimerDisplay(secs) {
             const m = Math.floor(secs / 60);
             const s = secs % 60;
-            timerDisplay.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            largeTimerDisplay.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
         timerMinsInput.addEventListener('change', initTimerDisplay);
         timerSecsInput.addEventListener('change', initTimerDisplay);
 
-        // Toggle Start/Stop Timer
         function toggleTimer() {
             if (isTimerRunning) {
                 stopTimer();
@@ -305,15 +366,11 @@
 
         function startTimer() {
             resetFlashing();
-            
-            if (totalSeconds <= 0) {
-                initTimerDisplay();
-            }
-
+            if (totalSeconds <= 0) initTimerDisplay();
             if (totalSeconds <= 0) return;
 
             isTimerRunning = true;
-            timerBtn.textContent = 'Stop';
+            timerBtn.textContent = 'Stop Countdown';
             timerBtn.classList.remove('btn-start');
             timerBtn.classList.add('btn-stop');
 
@@ -324,11 +381,12 @@
                 if (totalSeconds <= 0) {
                     clearInterval(timerInterval);
                     isTimerRunning = false;
-                    timerBtn.textContent = 'Start';
+                    timerBtn.textContent = 'Start Countdown';
                     timerBtn.classList.remove('btn-stop');
                     timerBtn.classList.add('btn-start');
 
-                    // Memicu efek kedap-kedip warna latar
+                    // Switch back to editor tab and start flashing
+                    switchTab('editorTab', document.querySelectorAll('.tab-btn')[0]);
                     notepad.classList.add('time-up');
                     playBeepSound();
                 }
@@ -338,7 +396,7 @@
         function stopTimer() {
             clearInterval(timerInterval);
             isTimerRunning = false;
-            timerBtn.textContent = 'Start';
+            timerBtn.textContent = 'Start Countdown';
             timerBtn.classList.remove('btn-stop');
             timerBtn.classList.add('btn-start');
             resetFlashing();
@@ -347,10 +405,9 @@
 
         function resetFlashing() {
             notepad.classList.remove('time-up');
-            applyStyles(); // Kembalikan ke warna asli
+            applyStyles();
         }
 
-        // Bunyi Alarm Sederhana dari Web Audio API
         function playBeepSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -358,20 +415,20 @@
                 const gain = audioCtx.createGain();
 
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880Hz (A5)
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
                 gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
 
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
 
                 osc.start();
-                osc.stop(audioCtx.currentTime + 1.5); // Berbunyi 1.5 detik
+                osc.stop(audioCtx.currentTime + 1.5);
             } catch (e) {
-                console.log("Audio not allowed without user interaction.");
+                console.log("Audio alert blocked.");
             }
         }
 
-        // Buat Dokumen Baru
+        // File Management
         function newFile() {
             if (notepad.value.trim() !== "") {
                 if (confirm("Apakah Anda yakin ingin membuat catatan baru?")) {
@@ -381,7 +438,6 @@
             }
         }
 
-        // Unduh Teks sebagai file .txt
         function downloadFile() {
             const text = notepad.value;
             const blob = new Blob([text], { type: 'text/plain' });
@@ -392,7 +448,6 @@
             window.URL.revokeObjectURL(anchor.href);
         }
 
-        // Buka File .txt dari Komputer
         function openFile(event) {
             const file = event.target.files[0];
             if (!file) return;
