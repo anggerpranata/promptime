@@ -151,7 +151,21 @@
             flex-direction: column;
         }
 
-        /* Tab 1: Editor Window */
+        /* Tab 1: Editor Window Wrapper */
+        .editor-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            overflow: hidden;
+            background-color: #ffffff;
+            transition: background-color 0.2s;
+        }
+
+        .editor-wrapper.v-top { justify-content: flex-start; }
+        .editor-wrapper.v-middle { justify-content: center; }
+        .editor-wrapper.v-bottom { justify-content: flex-end; }
+
         textarea {
             width: 100%;
             height: 100%;
@@ -162,10 +176,15 @@
             font-size: 200px;
             line-height: 1.5;
             letter-spacing: 0px;
-            background-color: #ffffff;
+            background-color: transparent;
             color: #000000;
             text-align: left;
-            transition: background-color 0.2s;
+        }
+
+        .editor-wrapper.v-middle textarea,
+        .editor-wrapper.v-bottom textarea {
+            height: auto;
+            max-height: 100%;
         }
 
         /* Custom Flashing Animation Shared */
@@ -174,7 +193,7 @@
             100% { background-color: var(--flash-color-2); }
         }
 
-        textarea.flashing-active,
+        .editor-wrapper.flashing-active,
         .timer-window.time-up {
             animation: custom-flashing 0.4s infinite alternate !important;
         }
@@ -237,19 +256,26 @@
 
             <div class="menu-group">
                 <div class="control-item">
-                    <label>Rataan:</label>
+                    <label>Rata H:</label>
                     <button class="btn btn-align active" id="alignLeft" onclick="setTextAlign('left')">⬅ Left</button>
                     <button class="btn btn-align" id="alignCenter" onclick="setTextAlign('center')">↔ Center</button>
                     <button class="btn btn-align" id="alignRight" onclick="setTextAlign('right')">➡ Right</button>
                 </div>
 
                 <div class="control-item">
-                    <label for="letterSpacing">Spasi Huruf:</label>
+                    <label>Rata V:</label>
+                    <button class="btn btn-align active" id="vAlignTop" onclick="setVerticalAlign('top')">⬆ Top</button>
+                    <button class="btn btn-align" id="vAlignCenter" onclick="setVerticalAlign('middle')">↕ Middle</button>
+                    <button class="btn btn-align" id="vAlignBottom" onclick="setVerticalAlign('bottom')">⬇ Bottom</button>
+                </div>
+
+                <div class="control-item">
+                    <label for="letterSpacing">Spasi:</label>
                     <input type="number" id="letterSpacing" value="0" min="-2" max="50" style="width: 45px;"> px
                 </div>
 
                 <div class="control-item">
-                    <label for="lineHeight">Jarak Baris:</label>
+                    <label for="lineHeight">Baris:</label>
                     <input type="number" id="lineHeight" value="1.5" min="0.8" max="4" step="0.1" style="width: 50px;">
                 </div>
 
@@ -270,7 +296,9 @@
             </div>
         </div>
 
-        <textarea id="notepad" placeholder="Mulai mengetik di sini..." oninput="updateStats()"></textarea>
+        <div class="editor-wrapper v-top" id="editorWrapper">
+            <textarea id="notepad" placeholder="Mulai mengetik di sini..." oninput="updateStats()"></textarea>
+        </div>
     </div>
 
     <div id="timerTab" class="tab-content">
@@ -329,6 +357,7 @@
 
     <script>
         const notepad = document.getElementById('notepad');
+        const editorWrapper = document.getElementById('editorWrapper');
         const stats = document.getElementById('stats');
         const autoSaveStatus = document.getElementById('autoSaveStatus');
         
@@ -356,6 +385,7 @@
         let isTimerRunning = false;
         let isFlashingActive = false;
         let currentAlign = 'left';
+        let currentVAlign = 'top';
 
         // Switch Tabs
         function switchTab(tabId, btnElement) {
@@ -392,13 +422,16 @@
             const savedAlign = localStorage.getItem('webNotepadAlign');
             if (savedAlign) setTextAlign(savedAlign);
 
+            const savedVAlign = localStorage.getItem('webNotepadVAlign');
+            if (savedVAlign) setVerticalAlign(savedVAlign);
+
             applyStyles();
             applyTimerStyles();
             updateStats();
             initTimerDisplay();
         };
 
-        // Rataan Teks (Text Align)
+        // Rataan Teks Horizontal
         function setTextAlign(align) {
             currentAlign = align;
             notepad.style.textAlign = align;
@@ -414,11 +447,39 @@
             localStorage.setItem('webNotepadAlign', align);
         }
 
+        // Rataan Teks Vertikal
+        function setVerticalAlign(vAlign) {
+            currentVAlign = vAlign;
+            editorWrapper.classList.remove('v-top', 'v-middle', 'v-bottom');
+            editorWrapper.classList.add('v-' + vAlign);
+
+            document.getElementById('vAlignTop').classList.remove('active');
+            document.getElementById('vAlignCenter').classList.remove('active');
+            document.getElementById('vAlignBottom').classList.remove('active');
+
+            if (vAlign === 'top') document.getElementById('vAlignTop').classList.add('active');
+            if (vAlign === 'middle') document.getElementById('vAlignCenter').classList.add('active');
+            if (vAlign === 'bottom') document.getElementById('vAlignBottom').classList.add('active');
+
+            localStorage.setItem('webNotepadVAlign', vAlign);
+            autoResizeTextarea();
+        }
+
+        // Auto Resize Textarea for Vertical Alignment
+        function autoResizeTextarea() {
+            if (currentVAlign === 'middle' || currentVAlign === 'bottom') {
+                notepad.style.height = 'auto';
+                notepad.style.height = notepad.scrollHeight + 'px';
+            } else {
+                notepad.style.height = '100%';
+            }
+        }
+
         // Editor Styles
         function applyStyles() {
             notepad.style.fontSize = fontSizeInput.value + 'px';
             notepad.style.color = textColorInput.value;
-            notepad.style.backgroundColor = bgColorInput.value;
+            editorWrapper.style.backgroundColor = bgColorInput.value;
             notepad.style.letterSpacing = letterSpacingInput.value + 'px';
             notepad.style.lineHeight = lineHeightInput.value;
 
@@ -427,6 +488,8 @@
             localStorage.setItem('webNotepadBgColor', bgColorInput.value);
             localStorage.setItem('webNotepadLetterSpacing', letterSpacingInput.value);
             localStorage.setItem('webNotepadLineHeight', lineHeightInput.value);
+            
+            autoResizeTextarea();
         }
 
         fontSizeInput.addEventListener('input', applyStyles);
@@ -443,6 +506,8 @@
             stats.textContent = `Karakter: ${charCount} | Kata: ${wordCount}`;
             localStorage.setItem('webNotepadText', text);
             autoSaveStatus.textContent = "Tersimpan otomatis";
+
+            autoResizeTextarea();
         }
 
         // Sakelar Lampu Peringatan (Toggle On/Off 1x Klik)
@@ -450,14 +515,14 @@
             isFlashingActive = !isFlashingActive;
 
             if (isFlashingActive) {
-                notepad.style.setProperty('--flash-color-1', flashColor1Input.value);
-                notepad.style.setProperty('--flash-color-2', flashColor2Input.value);
-                notepad.classList.add('flashing-active');
+                editorWrapper.style.setProperty('--flash-color-1', flashColor1Input.value);
+                editorWrapper.style.setProperty('--flash-color-2', flashColor2Input.value);
+                editorWrapper.classList.add('flashing-active');
                 
                 lightAlertBtn.textContent = '💡 Lampu Peringatan: ON';
                 lightAlertBtn.classList.add('active');
             } else {
-                notepad.classList.remove('flashing-active');
+                editorWrapper.classList.remove('flashing-active');
                 applyStyles();
 
                 lightAlertBtn.textContent = '💡 Lampu Peringatan: OFF';
