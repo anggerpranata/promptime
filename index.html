@@ -85,6 +85,18 @@
         }
 
         .btn:hover { background-color: #e5e5e5; }
+        
+        .btn-align {
+            padding: 4px 8px;
+            font-weight: bold;
+        }
+
+        .btn-align.active {
+            background-color: #008cba;
+            color: #ffffff;
+            border-color: #007399;
+        }
+
         .btn-start { background-color: #008cba; color: white; border-color: #007399; }
         .btn-start:hover { background-color: #007399; }
         .btn-stop { background-color: #d9534f; color: white; border-color: #d43f3a; }
@@ -134,6 +146,7 @@
             line-height: 1.5;
             background-color: #ffffff;
             color: #000000;
+            text-align: left;
         }
 
         /* Tab 2: Timer Window */
@@ -222,6 +235,13 @@
         </div>
 
         <div class="menu-group">
+            <div class="control-item">
+                <label>Rataan:</label>
+                <button class="btn btn-align active" id="alignLeft" onclick="setTextAlign('left')">⬅ Left</button>
+                <button class="btn btn-align" id="alignCenter" onclick="setTextAlign('center')">↔ Center</button>
+                <button class="btn btn-align" id="alignRight" onclick="setTextAlign('right')">➡ Right</button>
+            </div>
+
             <div class="control-item">
                 <label for="fontSize">Ukuran:</label>
                 <input type="number" id="fontSize" value="16" min="10" max="72">
@@ -316,6 +336,7 @@
         let timerInterval = null;
         let totalSeconds = 0;
         let isTimerRunning = false;
+        let currentAlign = 'left';
 
         // Switch Tabs
         function switchTab(tabId, btnElement) {
@@ -346,11 +367,30 @@
             const savedBgColor = localStorage.getItem('webNotepadBgColor');
             if (savedBgColor) bgColorInput.value = savedBgColor;
 
+            const savedAlign = localStorage.getItem('webNotepadAlign');
+            if (savedAlign) setTextAlign(savedAlign);
+
             applyStyles();
             applyTimerStyles();
             updateStats();
             initTimerDisplay();
         };
+
+        // Rataan Teks (Text Align)
+        function setTextAlign(align) {
+            currentAlign = align;
+            notepad.style.textAlign = align;
+
+            document.getElementById('alignLeft').classList.remove('active');
+            document.getElementById('alignCenter').classList.remove('active');
+            document.getElementById('alignRight').classList.remove('active');
+
+            if (align === 'left') document.getElementById('alignLeft').classList.add('active');
+            if (align === 'center') document.getElementById('alignCenter').classList.add('active');
+            if (align === 'right') document.getElementById('alignRight').classList.add('active');
+
+            localStorage.setItem('webNotepadAlign', align);
+        }
 
         // Editor Styles
         function applyStyles() {
@@ -377,13 +417,12 @@
             autoSaveStatus.textContent = "Tersimpan otomatis";
         }
 
-        // Apply Timer Styles & Custom Flash Colors
+        // Timer Styles & Custom Flash Colors
         function applyTimerStyles() {
             largeTimerDisplay.style.fontSize = timerFontSizeInput.value + 'px';
             timerWindow.style.color = timerTextColorInput.value;
             timerWindow.style.backgroundColor = timerBgColorInput.value;
 
-            // Set Custom Variables for CSS Flash Animation
             timerWindow.style.setProperty('--flash-color-1', flashColor1Input.value);
             timerWindow.style.setProperty('--flash-color-2', flashColor2Input.value);
         }
@@ -442,7 +481,6 @@
                     timerBtn.classList.remove('btn-stop');
                     timerBtn.classList.add('btn-start');
 
-                    // Tampilkan pesan kustom dan aktifkan animasi kedap-kedip kustom
                     const customMsg = alertMessageInput.value.trim() || 'WAKTU HABIS!';
                     largeTimerDisplay.textContent = customMsg;
                     applyTimerStyles();
