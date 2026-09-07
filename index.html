@@ -143,10 +143,11 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background-color: #f9f9f9;
+            background-color: #ffffff;
+            color: #000000;
             gap: 20px;
             padding: 20px;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, color 0.2s;
         }
 
         .timer-display-box {
@@ -156,23 +157,20 @@
         }
 
         .large-timer-display {
-            font-size: 5rem;
+            font-size: 80px;
             font-family: monospace;
             font-weight: bold;
             line-height: 1.2;
         }
 
-        /* Flashing Animation when Time's Up */
-        @keyframes flashing-timer-bg {
-            0% { background-color: #ff0000; color: #ffffff; }
-            25% { background-color: #ffff00; color: #000000; }
-            50% { background-color: #00ff00; color: #000000; }
-            75% { background-color: #00ffff; color: #000000; }
-            100% { background-color: #ff00ff; color: #ffffff; }
+        /* Custom Flashing Animation when Time's Up */
+        @keyframes custom-flashing {
+            0% { background-color: var(--flash-color-1); }
+            100% { background-color: var(--flash-color-2); }
         }
 
         .timer-window.time-up {
-            animation: flashing-timer-bg 0.4s infinite alternate !important;
+            animation: custom-flashing 0.4s infinite alternate !important;
         }
 
         .timer-settings-panel {
@@ -180,18 +178,20 @@
             flex-direction: column;
             gap: 12px;
             background: #ffffff;
+            color: #333333;
             padding: 15px 20px;
             border: 1px solid #ababab;
             border-radius: 4px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            z-index: 10;
         }
 
         .settings-row {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             flex-wrap: wrap;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         /* Status Bar Bottom */
@@ -249,19 +249,35 @@
                 <div class="large-timer-display" id="largeTimerDisplay">01:00</div>
             </div>
             
-            <div class="timer-settings-panel">
+            <div class="timer-settings-panel" onclick="event.stopPropagation()">
                 <div class="settings-row">
-                    <label>Durasi Timer:</label>
+                    <label>Durasi:</label>
                     <input type="number" id="timerMins" value="1" min="0" max="180"> m
                     <input type="number" id="timerSecs" value="0" min="0" max="59"> s
                     
-                    <label style="margin-left: 10px;">Ukuran Font Timer:</label>
+                    <label style="margin-left: 8px;">Ukuran Font:</label>
                     <input type="number" id="timerFontSize" value="80" min="20" max="250"> px
                 </div>
 
                 <div class="settings-row">
+                    <label for="timerTextColor">Warna Font Timer:</label>
+                    <input type="color" id="timerTextColor" value="#000000">
+
+                    <label for="timerBgColor" style="margin-left: 8px;">Warna Latar Timer:</label>
+                    <input type="color" id="timerBgColor" value="#ffffff">
+                </div>
+
+                <div class="settings-row">
+                    <label for="flashColor1">Warna Kedip 1:</label>
+                    <input type="color" id="flashColor1" value="#ff0000">
+
+                    <label for="flashColor2" style="margin-left: 8px;">Warna Kedip 2:</label>
+                    <input type="color" id="flashColor2" value="#ffff00">
+                </div>
+
+                <div class="settings-row">
                     <label for="alertMessage">Pesan Waktu Habis:</label>
-                    <input type="text" id="alertMessage" value="WAKTU HABIS!" style="flex: 1; min-width: 200px;">
+                    <input type="text" id="alertMessage" value="WAKTU HABIS!" style="flex: 1; min-width: 180px;">
                 </div>
 
                 <div class="settings-row" style="justify-content: center; margin-top: 5px;">
@@ -289,6 +305,10 @@
         const timerMinsInput = document.getElementById('timerMins');
         const timerSecsInput = document.getElementById('timerSecs');
         const timerFontSizeInput = document.getElementById('timerFontSize');
+        const timerTextColorInput = document.getElementById('timerTextColor');
+        const timerBgColorInput = document.getElementById('timerBgColor');
+        const flashColor1Input = document.getElementById('flashColor1');
+        const flashColor2Input = document.getElementById('flashColor2');
         const alertMessageInput = document.getElementById('alertMessage');
         const largeTimerDisplay = document.getElementById('largeTimerDisplay');
         const timerBtn = document.getElementById('timerBtn');
@@ -327,8 +347,8 @@
             if (savedBgColor) bgColorInput.value = savedBgColor;
 
             applyStyles();
+            applyTimerStyles();
             updateStats();
-            updateTimerFontSize();
             initTimerDisplay();
         };
 
@@ -357,13 +377,24 @@
             autoSaveStatus.textContent = "Tersimpan otomatis";
         }
 
-        // Adjust Timer Font Size
-        function updateTimerFontSize() {
+        // Apply Timer Styles & Custom Flash Colors
+        function applyTimerStyles() {
             largeTimerDisplay.style.fontSize = timerFontSizeInput.value + 'px';
-        }
-        timerFontSizeInput.addEventListener('input', updateTimerFontSize);
+            timerWindow.style.color = timerTextColorInput.value;
+            timerWindow.style.backgroundColor = timerBgColorInput.value;
 
-        // Timer Functionality
+            // Set Custom Variables for CSS Flash Animation
+            timerWindow.style.setProperty('--flash-color-1', flashColor1Input.value);
+            timerWindow.style.setProperty('--flash-color-2', flashColor2Input.value);
+        }
+
+        timerFontSizeInput.addEventListener('input', applyTimerStyles);
+        timerTextColorInput.addEventListener('input', applyTimerStyles);
+        timerBgColorInput.addEventListener('input', applyTimerStyles);
+        flashColor1Input.addEventListener('input', applyTimerStyles);
+        flashColor2Input.addEventListener('input', applyTimerStyles);
+
+        // Timer Logic
         function initTimerDisplay() {
             if (!isTimerRunning) {
                 const m = parseInt(timerMinsInput.value) || 0;
@@ -411,9 +442,10 @@
                     timerBtn.classList.remove('btn-stop');
                     timerBtn.classList.add('btn-start');
 
-                    // Tampilkan pesan kustom dan jalankan efek kedap-kedip
+                    // Tampilkan pesan kustom dan aktifkan animasi kedap-kedip kustom
                     const customMsg = alertMessageInput.value.trim() || 'WAKTU HABIS!';
                     largeTimerDisplay.textContent = customMsg;
+                    applyTimerStyles();
                     timerWindow.classList.add('time-up');
                     playBeepSound();
                 }
@@ -433,6 +465,7 @@
         function resetTimerFlashing() {
             if (timerWindow.classList.contains('time-up')) {
                 timerWindow.classList.remove('time-up');
+                applyTimerStyles();
                 initTimerDisplay();
             }
         }
