@@ -82,6 +82,7 @@
             cursor: pointer;
             border-radius: 2px;
             font-weight: 600;
+            user-select: none;
         }
 
         .btn:hover { background-color: #e5e5e5; }
@@ -95,6 +96,16 @@
             background-color: #008cba;
             color: #ffffff;
             border-color: #007399;
+        }
+
+        .btn-alert {
+            background-color: #ff8c00;
+            color: #ffffff;
+            border-color: #e07b00;
+        }
+
+        .btn-alert:hover {
+            background-color: #e07b00;
         }
 
         .btn-start { background-color: #008cba; color: white; border-color: #007399; }
@@ -148,6 +159,18 @@
             background-color: #ffffff;
             color: #000000;
             text-align: left;
+            transition: background-color 0.2s;
+        }
+
+        /* Custom Flashing Animation Shared */
+        @keyframes custom-flashing {
+            0% { background-color: var(--flash-color-1); }
+            100% { background-color: var(--flash-color-2); }
+        }
+
+        textarea.flashing-active,
+        .timer-window.time-up {
+            animation: custom-flashing 0.4s infinite alternate !important;
         }
 
         /* Tab 2: Timer Window */
@@ -176,16 +199,6 @@
             line-height: 1.2;
         }
 
-        /* Custom Flashing Animation when Time's Up */
-        @keyframes custom-flashing {
-            0% { background-color: var(--flash-color-1); }
-            100% { background-color: var(--flash-color-2); }
-        }
-
-        .timer-window.time-up {
-            animation: custom-flashing 0.4s infinite alternate !important;
-        }
-
         /* Status Bar Bottom */
         .status-bar {
             background-color: #f0f0f0;
@@ -212,6 +225,13 @@
                 <button class="btn" onclick="document.getElementById('fileInput').click()">Buka File</button>
                 <button class="btn" onclick="downloadFile()">Simpan (.txt)</button>
                 <input type="file" id="fileInput" style="display: none;" accept=".txt" onchange="openFile(event)">
+                
+                <button class="btn btn-alert" id="lightAlertBtn" 
+                        onmousedown="startFlashLight()" 
+                        onmouseup="stopFlashLight()" 
+                        onmouseleave="stopFlashLight()"
+                        ontouchstart="startFlashLight()" 
+                        ontouchend="stopFlashLight()">💡 Lampu Peringatan</button>
             </div>
 
             <div class="menu-group">
@@ -393,6 +413,18 @@
             stats.textContent = `Karakter: ${charCount} | Kata: ${wordCount}`;
             localStorage.setItem('webNotepadText', text);
             autoSaveStatus.textContent = "Tersimpan otomatis";
+        }
+
+        // Lampu Peringatan Kedap-Kedip pada Jendela Ketik
+        function startFlashLight() {
+            notepad.style.setProperty('--flash-color-1', flashColor1Input.value);
+            notepad.style.setProperty('--flash-color-2', flashColor2Input.value);
+            notepad.classList.add('flashing-active');
+        }
+
+        function stopFlashLight() {
+            notepad.classList.remove('flashing-active');
+            applyStyles();
         }
 
         // Timer Styles & Custom Flash Colors
