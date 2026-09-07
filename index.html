@@ -127,7 +127,7 @@
             font-family: monospace;
         }
 
-        input[type="number"] { width: 50px; }
+        input[type="number"] { width: 60px; }
 
         input[type="color"] {
             width: 28px;
@@ -159,7 +159,7 @@
             border: none;
             outline: none;
             resize: none;
-            font-size: 16px;
+            font-size: 200px;
             line-height: 1.5;
             letter-spacing: 0px;
             background-color: #ffffff;
@@ -199,7 +199,7 @@
         }
 
         .large-timer-display {
-            font-size: 120px;
+            font-size: 400px;
             font-family: monospace;
             font-weight: bold;
             line-height: 1.2;
@@ -245,7 +245,7 @@
 
                 <div class="control-item">
                     <label for="letterSpacing">Spasi Huruf:</label>
-                    <input type="number" id="letterSpacing" value="0" min="-2" max="20" style="width: 45px;"> px
+                    <input type="number" id="letterSpacing" value="0" min="-2" max="50" style="width: 45px;"> px
                 </div>
 
                 <div class="control-item">
@@ -255,7 +255,7 @@
 
                 <div class="control-item">
                     <label for="fontSize">Ukuran:</label>
-                    <input type="number" id="fontSize" value="16" min="10" max="72">
+                    <input type="number" id="fontSize" value="200" min="10" max="500">
                 </div>
 
                 <div class="control-item">
@@ -284,7 +284,7 @@
 
                 <div class="control-item">
                     <label for="timerFontSize">Ukuran:</label>
-                    <input type="number" id="timerFontSize" value="120" min="20" max="250">
+                    <input type="number" id="timerFontSize" value="400" min="20" max="800">
                 </div>
 
                 <div class="control-item">
@@ -372,7 +372,10 @@
             if (savedText !== null) notepad.value = savedText;
 
             const savedFontSize = localStorage.getItem('webNotepadFontSize');
-            if (savedFontSize) fontSizeInput.value = savedFontSize;
+            fontSizeInput.value = savedFontSize ? savedFontSize : "200";
+
+            const savedTimerFontSize = localStorage.getItem('webTimerFontSize');
+            timerFontSizeInput.value = savedTimerFontSize ? savedTimerFontSize : "400";
 
             const savedTextColor = localStorage.getItem('webNotepadTextColor');
             if (savedTextColor) textColorInput.value = savedTextColor;
@@ -470,6 +473,8 @@
 
             timerWindow.style.setProperty('--flash-color-1', flashColor1Input.value);
             timerWindow.style.setProperty('--flash-color-2', flashColor2Input.value);
+
+            localStorage.setItem('webTimerFontSize', timerFontSizeInput.value);
         }
 
         timerFontSizeInput.addEventListener('input', applyTimerStyles);
