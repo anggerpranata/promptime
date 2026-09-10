@@ -458,7 +458,7 @@
         let currentAlign = 'left';
         let currentVAlign = 'top';
 
-        // Fitur Drag Resizer (Geser Pembatas Layar Mode Split)
+        // Drag Resizer
         let isDragging = false;
 
         resizer.addEventListener('mousedown', function(e) {
@@ -477,7 +477,6 @@
             
             let newEditorWidthPercent = (pointerRelativeX / containerWidth) * 100;
 
-            // Batasi agar ukuran tidak terlalu sempit (antara 15% sampai 85%)
             if (newEditorWidthPercent < 15) newEditorWidthPercent = 15;
             if (newEditorWidthPercent > 85) newEditorWidthPercent = 85;
 
@@ -516,7 +515,6 @@
                 document.getElementById('tabTimerBtn').classList.add('active');
                 document.getElementById('modeSplitBtn').classList.add('active');
 
-                // Muat lebar tersimpan untuk mode split
                 const savedWidth = localStorage.getItem('webSplitWidth');
                 editorTab.style.width = savedWidth ? savedWidth + '%' : '50%';
             }
@@ -761,7 +759,7 @@
         function playBeepSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc.type = 'sine';
+                const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
 
                 osc.type = 'sine';
