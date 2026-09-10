@@ -18,14 +18,21 @@
             height: 100vh;
             background-color: #f0f0f0;
             color: #000000;
+            overflow: hidden;
         }
 
-        /* Top Navigation Tabs */
+        /* Top Navigation Bar */
         .tab-bar {
             background-color: #e1dfdd;
             border-bottom: 1px solid #dcdcdc;
             display: flex;
-            padding-left: 10px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 10px 0 10px;
+        }
+
+        .tab-group {
+            display: flex;
             gap: 4px;
         }
 
@@ -47,7 +54,53 @@
             color: #000;
         }
 
-        /* Top Control Bar Shared Style */
+        /* Layout Switcher Control */
+        .layout-switcher {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .btn-layout {
+            background-color: #ffffff;
+            border: 1px solid #ababab;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .btn-layout.active {
+            background-color: #008cba;
+            color: #ffffff;
+            border-color: #007399;
+        }
+
+        /* Main Workspace & Split Screen Manager */
+        .workspace {
+            flex: 1;
+            display: flex;
+            width: 100%;
+            height: calc(100vh - 70px);
+            overflow: hidden;
+        }
+
+        /* Split Screen Modes */
+        .workspace.mode-editor #editorTab { display: flex; flex: 1; width: 100%; }
+        .workspace.mode-editor #timerTab { display: none; }
+
+        .workspace.mode-timer #editorTab { display: none; }
+        .workspace.mode-timer #timerTab { display: flex; flex: 1; width: 100%; }
+
+        .workspace.mode-split #editorTab { display: flex; flex: 1; width: 50%; border-right: 2px solid #dcdcdc; }
+        .workspace.mode-split #timerTab { display: flex; flex: 1; width: 50%; }
+
+        /* Shared Control Bar Style */
         .control-bar {
             background-color: #ffffff;
             border-bottom: 1px solid #dcdcdc;
@@ -56,29 +109,29 @@
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
 
         .menu-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         .control-item {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
+            gap: 4px;
+            font-size: 0.8rem;
             color: #333;
         }
 
         .btn {
             background-color: #ffffff;
             border: 1px solid #ababab;
-            padding: 4px 10px;
-            font-size: 0.85rem;
+            padding: 4px 8px;
+            font-size: 0.8rem;
             cursor: pointer;
             border-radius: 2px;
             font-weight: 600;
@@ -86,32 +139,13 @@
         }
 
         .btn:hover { background-color: #e5e5e5; }
-        
-        .btn-align {
-            padding: 4px 8px;
-            font-weight: bold;
-        }
 
-        .btn-align.active {
-            background-color: #008cba;
-            color: #ffffff;
-            border-color: #007399;
-        }
+        .btn-align { padding: 3px 6px; font-weight: bold; }
+        .btn-align.active { background-color: #008cba; color: #ffffff; border-color: #007399; }
 
-        .btn-alert {
-            background-color: #ff8c00;
-            color: #ffffff;
-            border-color: #e07b00;
-        }
-
-        .btn-alert:hover {
-            background-color: #e07b00;
-        }
-
-        .btn-alert.active {
-            background-color: #d9534f;
-            border-color: #d43f3a;
-        }
+        .btn-alert { background-color: #ff8c00; color: #ffffff; border-color: #e07b00; }
+        .btn-alert:hover { background-color: #e07b00; }
+        .btn-alert.active { background-color: #d9534f; border-color: #d43f3a; }
 
         .btn-start { background-color: #008cba; color: white; border-color: #007399; }
         .btn-start:hover { background-color: #007399; }
@@ -119,39 +153,34 @@
         .btn-stop:hover { background-color: #c9302c; }
 
         input[type="number"], input[type="text"] {
-            padding: 3px 6px;
+            padding: 3px 5px;
             border: 1px solid #ababab;
             border-radius: 2px;
             outline: none;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-family: monospace;
         }
 
-        input[type="number"] { width: 60px; }
+        input[type="number"] { width: 50px; }
 
         input[type="color"] {
-            width: 28px;
-            height: 26px;
+            width: 26px;
+            height: 24px;
             border: 1px solid #ababab;
             border-radius: 2px;
             cursor: pointer;
             background: none;
         }
 
-        /* Tab Content Area */
-        .tab-content {
-            flex: 1;
-            display: none;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .tab-content.active {
+        /* Tab Content Panel */
+        .tab-panel {
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            height: 100%;
         }
 
-        /* Tab 1: Editor Window Wrapper */
+        /* Editor Section */
         .editor-wrapper {
             flex: 1;
             display: flex;
@@ -169,7 +198,7 @@
         textarea {
             width: 100%;
             height: 100%;
-            padding: 20px;
+            padding: 15px;
             border: none;
             outline: none;
             resize: none;
@@ -187,7 +216,7 @@
             max-height: 100%;
         }
 
-        /* Custom Flashing Animation Shared */
+        /* Custom Flashing Animation */
         @keyframes custom-flashing {
             0% { background-color: var(--flash-color-1); }
             100% { background-color: var(--flash-color-2); }
@@ -198,7 +227,7 @@
             animation: custom-flashing 0.4s infinite alternate !important;
         }
 
-        /* Tab 2: Timer Window */
+        /* Timer Section */
         .timer-window {
             flex: 1;
             display: flex;
@@ -238,124 +267,144 @@
 </head>
 <body>
 
+    <!-- Tab Header Navigation -->
     <div class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab('editorTab', this)">📝 Jendela Ketik</button>
-        <button class="tab-btn" onclick="switchTab('timerTab', this)">⏱️ Jendela Timer</button>
-    </div>
-
-    <div id="editorTab" class="tab-content active">
-        <div class="control-bar">
-            <div class="menu-group">
-                <button class="btn" onclick="newFile()">File Baru</button>
-                <button class="btn" onclick="document.getElementById('fileInput').click()">Buka File</button>
-                <button class="btn" onclick="downloadFile()">Simpan (.txt)</button>
-                <input type="file" id="fileInput" style="display: none;" accept=".txt" onchange="openFile(event)">
-                
-                <button class="btn btn-alert" id="lightAlertBtn" onclick="toggleFlashLight()">💡 Lampu Peringatan: OFF</button>
-            </div>
-
-            <div class="menu-group">
-                <div class="control-item">
-                    <label>Rata H:</label>
-                    <button class="btn btn-align active" id="alignLeft" onclick="setTextAlign('left')">⬅ Left</button>
-                    <button class="btn btn-align" id="alignCenter" onclick="setTextAlign('center')">↔ Center</button>
-                    <button class="btn btn-align" id="alignRight" onclick="setTextAlign('right')">➡ Right</button>
-                </div>
-
-                <div class="control-item">
-                    <label>Rata V:</label>
-                    <button class="btn btn-align active" id="vAlignTop" onclick="setVerticalAlign('top')">⬆ Top</button>
-                    <button class="btn btn-align" id="vAlignCenter" onclick="setVerticalAlign('middle')">↕ Middle</button>
-                    <button class="btn btn-align" id="vAlignBottom" onclick="setVerticalAlign('bottom')">⬇ Bottom</button>
-                </div>
-
-                <div class="control-item">
-                    <label for="letterSpacing">Spasi:</label>
-                    <input type="number" id="letterSpacing" value="0" min="-2" max="50" style="width: 45px;"> px
-                </div>
-
-                <div class="control-item">
-                    <label for="lineHeight">Baris:</label>
-                    <input type="number" id="lineHeight" value="1.5" min="0.8" max="4" step="0.1" style="width: 50px;">
-                </div>
-
-                <div class="control-item">
-                    <label for="fontSize">Ukuran:</label>
-                    <input type="number" id="fontSize" value="200" min="10" max="500">
-                </div>
-
-                <div class="control-item">
-                    <label for="textColor">Font:</label>
-                    <input type="color" id="textColor" value="#000000">
-                </div>
-
-                <div class="control-item">
-                    <label for="bgColor">Kertas:</label>
-                    <input type="color" id="bgColor" value="#ffffff">
-                </div>
-            </div>
+        <div class="tab-group">
+            <button class="tab-btn active" id="tabEditorBtn" onclick="setLayoutMode('editor')">📝 Jendela Ketik</button>
+            <button class="tab-btn" id="tabTimerBtn" onclick="setLayoutMode('timer')">⏱️ Jendela Timer</button>
         </div>
 
-        <div class="editor-wrapper v-top" id="editorWrapper">
-            <textarea id="notepad" placeholder="Mulai mengetik di sini..." oninput="updateStats()"></textarea>
+        <!-- Mode Tampilan Switcher -->
+        <div class="layout-switcher">
+            <label>Mode Tampilan:</label>
+            <button class="btn-layout active" id="modeEditorBtn" onclick="setLayoutMode('editor')">📄 Full Ketik</button>
+            <button class="btn-layout" id="modeTimerBtn" onclick="setLayoutMode('timer')">⏱️ Full Timer</button>
+            <button class="btn-layout" id="modeSplitBtn" onclick="setLayoutMode('split')">📑 Split (2 Tab)</button>
         </div>
     </div>
 
-    <div id="timerTab" class="tab-content">
-        <div class="control-bar">
-            <div class="menu-group">
-                <div class="control-item">
-                    <label>Durasi:</label>
-                    <input type="number" id="timerMins" value="1" min="0" max="180"> m
-                    <input type="number" id="timerSecs" value="0" min="0" max="59"> s
+    <!-- Main Workspace Container -->
+    <div class="workspace mode-editor" id="workspace">
+
+        <!-- TAB 1: Editor Window -->
+        <div id="editorTab" class="tab-panel">
+            <div class="control-bar">
+                <div class="menu-group">
+                    <button class="btn" onclick="newFile()">Baru</button>
+                    <button class="btn" onclick="document.getElementById('fileInput').click()">Buka</button>
+                    <button class="btn" onclick="downloadFile()">Simpan</button>
+                    <input type="file" id="fileInput" style="display: none;" accept=".txt" onchange="openFile(event)">
+                    
+                    <button class="btn btn-alert" id="lightAlertBtn" onclick="toggleFlashLight()">💡 Lampu: OFF</button>
                 </div>
 
-                <div class="control-item">
-                    <label for="timerFontSize">Ukuran:</label>
-                    <input type="number" id="timerFontSize" value="400" min="20" max="800">
-                </div>
+                <div class="menu-group">
+                    <div class="control-item">
+                        <label>Rata H:</label>
+                        <button class="btn btn-align active" id="alignLeft" onclick="setTextAlign('left')">⬅</button>
+                        <button class="btn btn-align" id="alignCenter" onclick="setTextAlign('center')">↔</button>
+                        <button class="btn btn-align" id="alignRight" onclick="setTextAlign('right')">➡</button>
+                    </div>
 
-                <div class="control-item">
-                    <label for="timerTextColor">Font:</label>
-                    <input type="color" id="timerTextColor" value="#000000">
-                </div>
+                    <div class="control-item">
+                        <label>Rata V:</label>
+                        <button class="btn btn-align active" id="vAlignTop" onclick="setVerticalAlign('top')">⬆</button>
+                        <button class="btn btn-align" id="vAlignCenter" onclick="setVerticalAlign('middle')">↕</button>
+                        <button class="btn btn-align" id="vAlignBottom" onclick="setVerticalAlign('bottom')">⬇</button>
+                    </div>
 
-                <div class="control-item">
-                    <label for="timerBgColor">Latar:</label>
-                    <input type="color" id="timerBgColor" value="#ffffff">
-                </div>
+                    <div class="control-item">
+                        <label for="letterSpacing">Spasi:</label>
+                        <input type="number" id="letterSpacing" value="0" min="-2" max="50">
+                    </div>
 
-                <div class="control-item">
-                    <label for="flashColor1">Kedip 1:</label>
-                    <input type="color" id="flashColor1" value="#ff0000">
-                    <label for="flashColor2">Kedip 2:</label>
-                    <input type="color" id="flashColor2" value="#ffff00">
+                    <div class="control-item">
+                        <label for="lineHeight">Baris:</label>
+                        <input type="number" id="lineHeight" value="1.5" min="0.8" max="4" step="0.1">
+                    </div>
+
+                    <div class="control-item">
+                        <label for="fontSize">Ukuran:</label>
+                        <input type="number" id="fontSize" value="200" min="10" max="500">
+                    </div>
+
+                    <div class="control-item">
+                        <label for="textColor">Font:</label>
+                        <input type="color" id="textColor" value="#000000">
+                    </div>
+
+                    <div class="control-item">
+                        <label for="bgColor">Kertas:</label>
+                        <input type="color" id="bgColor" value="#ffffff">
+                    </div>
                 </div>
             </div>
 
-            <div class="menu-group">
-                <div class="control-item">
-                    <label for="alertMessage">Pesan Habis:</label>
-                    <input type="text" id="alertMessage" value="WAKTU HABIS!" style="width: 140px;">
-                </div>
-
-                <button class="btn btn-start" id="timerBtn" onclick="toggleTimer()">Start Countdown</button>
+            <div class="editor-wrapper v-top" id="editorWrapper">
+                <textarea id="notepad" placeholder="Mulai mengetik di sini..." oninput="updateStats()"></textarea>
             </div>
         </div>
 
-        <div class="timer-window" id="timerWindow" onclick="resetTimerFlashing()">
-            <div class="timer-display-box">
-                <div class="large-timer-display" id="largeTimerDisplay">01:00</div>
+        <!-- TAB 2: Timer Window -->
+        <div id="timerTab" class="tab-panel">
+            <div class="control-bar">
+                <div class="menu-group">
+                    <div class="control-item">
+                        <label>Durasi:</label>
+                        <input type="number" id="timerMins" value="1" min="0" max="180"> m
+                        <input type="number" id="timerSecs" value="0" min="0" max="59"> s
+                    </div>
+
+                    <div class="control-item">
+                        <label for="timerFontSize">Ukuran:</label>
+                        <input type="number" id="timerFontSize" value="400" min="20" max="800">
+                    </div>
+
+                    <div class="control-item">
+                        <label for="timerTextColor">Font:</label>
+                        <input type="color" id="timerTextColor" value="#000000">
+                    </div>
+
+                    <div class="control-item">
+                        <label for="timerBgColor">Latar:</label>
+                        <input type="color" id="timerBgColor" value="#ffffff">
+                    </div>
+
+                    <div class="control-item">
+                        <label for="flashColor1">Kedip 1:</label>
+                        <input type="color" id="flashColor1" value="#ff0000">
+                        <label for="flashColor2">Kedip 2:</label>
+                        <input type="color" id="flashColor2" value="#ffff00">
+                    </div>
+                </div>
+
+                <div class="menu-group">
+                    <div class="control-item">
+                        <label for="alertMessage">Pesan:</label>
+                        <input type="text" id="alertMessage" value="WAKTU HABIS!" style="width: 120px;">
+                    </div>
+
+                    <button class="btn btn-start" id="timerBtn" onclick="toggleTimer()">Start Countdown</button>
+                </div>
+            </div>
+
+            <div class="timer-window" id="timerWindow" onclick="resetTimerFlashing()">
+                <div class="timer-display-box">
+                    <div class="large-timer-display" id="largeTimerDisplay">01:00</div>
+                </div>
             </div>
         </div>
+
     </div>
 
+    <!-- Status Bar -->
     <div class="status-bar">
         <span id="autoSaveStatus">Tersimpan otomatis</span>
         <span id="stats">Karakter: 0 | Kata: 0</span>
     </div>
 
     <script>
+        const workspace = document.getElementById('workspace');
         const notepad = document.getElementById('notepad');
         const editorWrapper = document.getElementById('editorWrapper');
         const stats = document.getElementById('stats');
@@ -387,13 +436,31 @@
         let currentAlign = 'left';
         let currentVAlign = 'top';
 
-        // Switch Tabs
-        function switchTab(tabId, btnElement) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        // Switch Layout Mode (Full Editor, Full Timer, atau Split Screen)
+        function setLayoutMode(mode) {
+            workspace.classList.remove('mode-editor', 'mode-timer', 'mode-split');
+            workspace.classList.add('mode-' + mode);
 
-            document.getElementById(tabId).classList.add('active');
-            btnElement.classList.add('active');
+            document.getElementById('tabEditorBtn').classList.remove('active');
+            document.getElementById('tabTimerBtn').classList.remove('active');
+            document.getElementById('modeEditorBtn').classList.remove('active');
+            document.getElementById('modeTimerBtn').classList.remove('active');
+            document.getElementById('modeSplitBtn').classList.remove('active');
+
+            if (mode === 'editor') {
+                document.getElementById('tabEditorBtn').classList.add('active');
+                document.getElementById('modeEditorBtn').classList.add('active');
+            } else if (mode === 'timer') {
+                document.getElementById('tabTimerBtn').classList.add('active');
+                document.getElementById('modeTimerBtn').classList.add('active');
+            } else if (mode === 'split') {
+                document.getElementById('tabEditorBtn').classList.add('active');
+                document.getElementById('tabTimerBtn').classList.add('active');
+                document.getElementById('modeSplitBtn').classList.add('active');
+            }
+
+            localStorage.setItem('webLayoutMode', mode);
+            autoResizeTextarea();
         }
 
         // Init App
@@ -424,6 +491,13 @@
 
             const savedVAlign = localStorage.getItem('webNotepadVAlign');
             if (savedVAlign) setVerticalAlign(savedVAlign);
+
+            const savedLayoutMode = localStorage.getItem('webLayoutMode');
+            if (savedLayoutMode) {
+                setLayoutMode(savedLayoutMode);
+            } else {
+                setLayoutMode('editor');
+            }
 
             applyStyles();
             applyTimerStyles();
@@ -465,7 +539,6 @@
             autoResizeTextarea();
         }
 
-        // Auto Resize Textarea for Vertical Alignment
         function autoResizeTextarea() {
             if (currentVAlign === 'middle' || currentVAlign === 'bottom') {
                 notepad.style.height = 'auto';
@@ -510,7 +583,7 @@
             autoResizeTextarea();
         }
 
-        // Sakelar Lampu Peringatan (Toggle On/Off 1x Klik)
+        // Lampu Peringatan (Toggle On/Off)
         function toggleFlashLight() {
             isFlashingActive = !isFlashingActive;
 
@@ -519,13 +592,13 @@
                 editorWrapper.style.setProperty('--flash-color-2', flashColor2Input.value);
                 editorWrapper.classList.add('flashing-active');
                 
-                lightAlertBtn.textContent = '💡 Lampu Peringatan: ON';
+                lightAlertBtn.textContent = '💡 Lampu: ON';
                 lightAlertBtn.classList.add('active');
             } else {
                 editorWrapper.classList.remove('flashing-active');
                 applyStyles();
 
-                lightAlertBtn.textContent = '💡 Lampu Peringatan: OFF';
+                lightAlertBtn.textContent = '💡 Lampu: OFF';
                 lightAlertBtn.classList.remove('active');
             }
         }
