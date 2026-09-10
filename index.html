@@ -21,7 +21,7 @@
             overflow: hidden;
         }
 
-        /* Top Navigation Bar */
+        /* Navigasi Atas */
         .tab-bar {
             background-color: #e1dfdd;
             border-bottom: 1px solid #dcdcdc;
@@ -54,7 +54,7 @@
             color: #000;
         }
 
-        /* Layout Switcher Control */
+        /* Mode Tampilan Switcher */
         .layout-switcher {
             display: flex;
             align-items: center;
@@ -81,26 +81,44 @@
             border-color: #007399;
         }
 
-        /* Main Workspace & Split Screen Manager */
+        /* Workspace & Split Screen */
         .workspace {
             flex: 1;
             display: flex;
             width: 100%;
             height: calc(100vh - 70px);
             overflow: hidden;
+            position: relative;
         }
 
-        /* Split Screen Modes */
-        .workspace.mode-editor #editorTab { display: flex; flex: 1; width: 100%; }
+        /* Pengaturan Tampilan Mode */
+        .workspace.mode-editor #editorTab { display: flex; width: 100% !important; flex: 1; }
         .workspace.mode-editor #timerTab { display: none; }
+        .workspace.mode-editor #resizer { display: none; }
 
         .workspace.mode-timer #editorTab { display: none; }
-        .workspace.mode-timer #timerTab { display: flex; flex: 1; width: 100%; }
+        .workspace.mode-timer #timerTab { display: flex; width: 100% !important; flex: 1; }
+        .workspace.mode-timer #resizer { display: none; }
 
-        .workspace.mode-split #editorTab { display: flex; flex: 1; width: 50%; border-right: 2px solid #dcdcdc; }
-        .workspace.mode-split #timerTab { display: flex; flex: 1; width: 50%; }
+        .workspace.mode-split #editorTab { display: flex; }
+        .workspace.mode-split #timerTab { display: flex; flex: 1; }
+        .workspace.mode-split #resizer { display: block; }
 
-        /* Shared Control Bar Style */
+        /* Splitter / Resizer Bar */
+        .resizer {
+            width: 8px;
+            background-color: #ababab;
+            cursor: col-resize;
+            user-select: none;
+            transition: background-color 0.2s;
+            z-index: 10;
+        }
+
+        .resizer:hover, .resizer.dragging {
+            background-color: #008cba;
+        }
+
+        /* Shared Control Bar */
         .control-bar {
             background-color: #ffffff;
             border-bottom: 1px solid #dcdcdc;
@@ -172,7 +190,7 @@
             background: none;
         }
 
-        /* Tab Content Panel */
+        /* Panel Tab Content */
         .tab-panel {
             display: flex;
             flex-direction: column;
@@ -180,7 +198,7 @@
             height: 100%;
         }
 
-        /* Editor Section */
+        /* Area Ketik (Editor Wrapper) */
         .editor-wrapper {
             flex: 1;
             display: flex;
@@ -216,7 +234,7 @@
             max-height: 100%;
         }
 
-        /* Custom Flashing Animation */
+        /* Animasi Kedap Kedip */
         @keyframes custom-flashing {
             0% { background-color: var(--flash-color-1); }
             100% { background-color: var(--flash-color-2); }
@@ -227,7 +245,7 @@
             animation: custom-flashing 0.4s infinite alternate !important;
         }
 
-        /* Timer Section */
+        /* Area Timer */
         .timer-window {
             flex: 1;
             display: flex;
@@ -253,7 +271,7 @@
             line-height: 1.2;
         }
 
-        /* Status Bar Bottom */
+        /* Status Bar Bawah */
         .status-bar {
             background-color: #f0f0f0;
             border-top: 1px solid #dcdcdc;
@@ -267,14 +285,13 @@
 </head>
 <body>
 
-    <!-- Tab Header Navigation -->
+    <!-- Navigasi Utama -->
     <div class="tab-bar">
         <div class="tab-group">
             <button class="tab-btn active" id="tabEditorBtn" onclick="setLayoutMode('editor')">📝 Jendela Ketik</button>
             <button class="tab-btn" id="tabTimerBtn" onclick="setLayoutMode('timer')">⏱️ Jendela Timer</button>
         </div>
 
-        <!-- Mode Tampilan Switcher -->
         <div class="layout-switcher">
             <label>Mode Tampilan:</label>
             <button class="btn-layout active" id="modeEditorBtn" onclick="setLayoutMode('editor')">📄 Full Ketik</button>
@@ -283,11 +300,11 @@
         </div>
     </div>
 
-    <!-- Main Workspace Container -->
+    <!-- Workspace Utama -->
     <div class="workspace mode-editor" id="workspace">
 
-        <!-- TAB 1: Editor Window -->
-        <div id="editorTab" class="tab-panel">
+        <!-- JENDELA KETIK -->
+        <div id="editorTab" class="tab-panel" style="width: 50%;">
             <div class="control-bar">
                 <div class="menu-group">
                     <button class="btn" onclick="newFile()">Baru</button>
@@ -345,7 +362,10 @@
             </div>
         </div>
 
-        <!-- TAB 2: Timer Window -->
+        <!-- RESIZER BAR (PEMBATAS BISA DIGESER) -->
+        <div class="resizer" id="resizer"></div>
+
+        <!-- JENDELA TIMER -->
         <div id="timerTab" class="tab-panel">
             <div class="control-bar">
                 <div class="menu-group">
@@ -405,6 +425,8 @@
 
     <script>
         const workspace = document.getElementById('workspace');
+        const editorTab = document.getElementById('editorTab');
+        const resizer = document.getElementById('resizer');
         const notepad = document.getElementById('notepad');
         const editorWrapper = document.getElementById('editorWrapper');
         const stats = document.getElementById('stats');
@@ -436,7 +458,43 @@
         let currentAlign = 'left';
         let currentVAlign = 'top';
 
-        // Switch Layout Mode (Full Editor, Full Timer, atau Split Screen)
+        // Fitur Drag Resizer (Geser Pembatas Layar Mode Split)
+        let isDragging = false;
+
+        resizer.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            resizer.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            
+            const containerOffsetLeft = workspace.offsetLeft;
+            const pointerRelativeX = e.clientX - containerOffsetLeft;
+            const containerWidth = workspace.clientWidth;
+            
+            let newEditorWidthPercent = (pointerRelativeX / containerWidth) * 100;
+
+            // Batasi agar ukuran tidak terlalu sempit (antara 15% sampai 85%)
+            if (newEditorWidthPercent < 15) newEditorWidthPercent = 15;
+            if (newEditorWidthPercent > 85) newEditorWidthPercent = 85;
+
+            editorTab.style.width = newEditorWidthPercent + '%';
+            localStorage.setItem('webSplitWidth', newEditorWidthPercent);
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                resizer.classList.remove('dragging');
+                document.body.style.cursor = 'default';
+                document.body.style.userSelect = 'auto';
+            }
+        });
+
+        // Ganti Mode Tampilan
         function setLayoutMode(mode) {
             workspace.classList.remove('mode-editor', 'mode-timer', 'mode-split');
             workspace.classList.add('mode-' + mode);
@@ -457,13 +515,17 @@
                 document.getElementById('tabEditorBtn').classList.add('active');
                 document.getElementById('tabTimerBtn').classList.add('active');
                 document.getElementById('modeSplitBtn').classList.add('active');
+
+                // Muat lebar tersimpan untuk mode split
+                const savedWidth = localStorage.getItem('webSplitWidth');
+                editorTab.style.width = savedWidth ? savedWidth + '%' : '50%';
             }
 
             localStorage.setItem('webLayoutMode', mode);
             autoResizeTextarea();
         }
 
-        // Init App
+        // Inisialisasi Aplikasi
         window.onload = function() {
             const savedText = localStorage.getItem('webNotepadText');
             if (savedText !== null) notepad.value = savedText;
@@ -548,7 +610,7 @@
             }
         }
 
-        // Editor Styles
+        // Terapkan Gaya Editor
         function applyStyles() {
             notepad.style.fontSize = fontSizeInput.value + 'px';
             notepad.style.color = textColorInput.value;
@@ -583,7 +645,7 @@
             autoResizeTextarea();
         }
 
-        // Lampu Peringatan (Toggle On/Off)
+        // Sakelar Lampu Peringatan
         function toggleFlashLight() {
             isFlashingActive = !isFlashingActive;
 
@@ -603,7 +665,7 @@
             }
         }
 
-        // Timer Styles & Custom Flash Colors
+        // Terapkan Gaya Timer
         function applyTimerStyles() {
             largeTimerDisplay.style.fontSize = timerFontSizeInput.value + 'px';
             timerWindow.style.color = timerTextColorInput.value;
@@ -621,7 +683,7 @@
         flashColor1Input.addEventListener('input', applyTimerStyles);
         flashColor2Input.addEventListener('input', applyTimerStyles);
 
-        // Timer Logic
+        // Logika Timer
         function initTimerDisplay() {
             if (!isTimerRunning) {
                 const m = parseInt(timerMinsInput.value) || 0;
@@ -699,7 +761,7 @@
         function playBeepSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
+                const osc.type = 'sine';
                 const gain = audioCtx.createGain();
 
                 osc.type = 'sine';
@@ -716,7 +778,7 @@
             }
         }
 
-        // File Management
+        // Manajemen File
         function newFile() {
             if (notepad.value.trim() !== "") {
                 if (confirm("Apakah Anda yakin ingin membuat catatan baru?")) {
