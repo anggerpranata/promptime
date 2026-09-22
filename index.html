@@ -5,109 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notepad & Timer Studio</title>
     <style>
+        :root {
+            --bg-main: #f8f9fa;
+            --bg-card: #ffffff;
+            --border-color: #e0e0e0;
+            --text-main: #212529;
+            --text-muted: #6c757d;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --warning: #d97706;
+            --warning-hover: #b45309;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
             display: flex;
             flex-direction: column;
             height: 100vh;
-            background-color: #f0f0f0;
-            color: #000000;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             overflow: hidden;
         }
 
-        /* Navigasi Atas */
-        .tab-bar {
-            background-color: #e1dfdd;
-            border-bottom: 1px solid #dcdcdc;
+        /* Top Navigation Header */
+        .header-bar {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 4px 10px 0 10px;
-        }
-
-        .tab-group {
-            display: flex;
-            gap: 4px;
-        }
-
-        .tab-btn {
-            background-color: #d1d1d1;
-            border: 1px solid #ababab;
-            border-bottom: none;
             padding: 8px 16px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            border-radius: 4px 4px 0 0;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 20;
+        }
+
+        .tab-segmented {
+            display: inline-flex;
+            background-color: #f1f5f9;
+            padding: 3px;
+            border-radius: 8px;
+            gap: 2px;
+        }
+
+        .tab-btn, .btn-layout {
+            border: none;
+            background: transparent;
+            padding: 6px 14px;
+            font-size: 0.82rem;
             font-weight: 600;
-            color: #444;
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
-        .tab-btn.active {
-            background-color: #ffffff;
-            border-top: 2px solid #008cba;
-            color: #000;
+        .tab-btn:hover, .btn-layout:hover {
+            color: var(--text-main);
         }
 
-        /* Mode Tampilan Switcher */
+        .tab-btn.active, .btn-layout.active {
+            background-color: var(--bg-card);
+            color: var(--primary);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
         .layout-switcher {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 4px;
         }
 
-        .btn-layout {
-            background-color: #ffffff;
-            border: 1px solid #ababab;
-            padding: 4px 10px;
+        .layout-label {
             font-size: 0.8rem;
-            cursor: pointer;
-            border-radius: 3px;
+            color: var(--text-muted);
             font-weight: 600;
         }
 
-        .btn-layout.active {
-            background-color: #008cba;
-            color: #ffffff;
-            border-color: #007399;
-        }
-
-        /* Workspace & Split Screen */
+        /* Main Workspace Container */
         .workspace {
             flex: 1;
             display: flex;
             width: 100%;
-            height: calc(100vh - 70px);
+            height: calc(100vh - 85px);
             overflow: hidden;
             position: relative;
         }
 
-        /* Pengaturan Tampilan Mode */
+        /* Layout Modes Control */
         .workspace.mode-editor #editorTab { display: flex; width: 100% !important; flex: 1; }
-        .workspace.mode-editor #timerTab { display: none; }
-        .workspace.mode-editor #resizer { display: none; }
+        .workspace.mode-editor #timerTab, .workspace.mode-editor #resizer { display: none; }
 
-        .workspace.mode-timer #editorTab { display: none; }
+        .workspace.mode-timer #editorTab, .workspace.mode-timer #resizer { display: none; }
         .workspace.mode-timer #timerTab { display: flex; width: 100% !important; flex: 1; }
-        .workspace.mode-timer #resizer { display: none; }
 
         .workspace.mode-split #editorTab { display: flex; }
         .workspace.mode-split #timerTab { display: flex; flex: 1; }
         .workspace.mode-split #resizer { display: block; }
 
-        /* Splitter / Resizer Bar */
+        /* Draggable Resizer Bar */
         .resizer {
-            width: 8px;
-            background-color: #ababab;
+            width: 6px;
+            background-color: var(--border-color);
             cursor: col-resize;
             user-select: none;
             transition: background-color 0.2s;
@@ -115,19 +123,19 @@
         }
 
         .resizer:hover, .resizer.dragging {
-            background-color: #008cba;
+            background-color: var(--primary);
         }
 
-        /* Shared Control Bar */
+        /* Control Bar Toolbar */
         .control-bar {
-            background-color: #ffffff;
-            border-bottom: 1px solid #dcdcdc;
-            padding: 8px 12px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            padding: 6px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
         }
 
         .menu-group {
@@ -140,57 +148,116 @@
         .control-item {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             font-size: 0.8rem;
-            color: #333;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .control-item label {
+            white-space: nowrap;
         }
 
         .btn {
-            background-color: #ffffff;
-            border: 1px solid #ababab;
-            padding: 4px 8px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 5px 12px;
             font-size: 0.8rem;
             cursor: pointer;
-            border-radius: 2px;
+            border-radius: 6px;
             font-weight: 600;
+            color: var(--text-main);
+            transition: all 0.15s ease;
             user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .btn:hover { background-color: #e5e5e5; }
+        .btn:hover {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
 
-        .btn-align { padding: 3px 6px; font-weight: bold; }
-        .btn-align.active { background-color: #008cba; color: #ffffff; border-color: #007399; }
+        .btn-align {
+            padding: 4px 8px;
+            font-weight: bold;
+        }
 
-        .btn-alert { background-color: #ff8c00; color: #ffffff; border-color: #e07b00; }
-        .btn-alert:hover { background-color: #e07b00; }
-        .btn-alert.active { background-color: #d9534f; border-color: #d43f3a; }
+        .btn-align.active {
+            background-color: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
 
-        .btn-start { background-color: #008cba; color: white; border-color: #007399; }
-        .btn-start:hover { background-color: #007399; }
-        .btn-stop { background-color: #d9534f; color: white; border-color: #d43f3a; }
-        .btn-stop:hover { background-color: #c9302c; }
+        .btn-alert {
+            background-color: #fff7ed;
+            color: var(--warning);
+            border-color: #fed7aa;
+        }
 
+        .btn-alert:hover {
+            background-color: #ffedd5;
+        }
+
+        .btn-alert.active {
+            background-color: var(--danger);
+            color: #ffffff;
+            border-color: var(--danger);
+        }
+
+        .btn-start {
+            background-color: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+
+        .btn-start:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-stop {
+            background-color: var(--danger);
+            color: #ffffff;
+            border-color: var(--danger);
+        }
+
+        .btn-stop:hover {
+            background-color: var(--danger-hover);
+        }
+
+        /* Inputs & Color Pickers */
         input[type="number"], input[type="text"] {
-            padding: 3px 5px;
-            border: 1px solid #ababab;
-            border-radius: 2px;
+            padding: 4px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             outline: none;
             font-size: 0.8rem;
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            transition: border-color 0.15s;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        input[type="number"] {
+            width: 55px;
             font-family: monospace;
         }
 
-        input[type="number"] { width: 50px; }
-
         input[type="color"] {
-            width: 26px;
-            height: 24px;
-            border: 1px solid #ababab;
-            border-radius: 2px;
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             cursor: pointer;
             background: none;
+            padding: 2px;
         }
 
-        /* Panel Tab Content */
+        /* Tab Panels */
         .tab-panel {
             display: flex;
             flex-direction: column;
@@ -198,14 +265,14 @@
             height: 100%;
         }
 
-        /* Area Ketik (Editor Wrapper) */
+        /* Editor Wrapper */
         .editor-wrapper {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
             overflow: hidden;
-            background-color: #ffffff;
+            background-color: var(--bg-card);
             transition: background-color 0.2s;
         }
 
@@ -216,7 +283,7 @@
         textarea {
             width: 100%;
             height: 100%;
-            padding: 15px;
+            padding: 24px;
             border: none;
             outline: none;
             resize: none;
@@ -224,8 +291,9 @@
             line-height: 1.5;
             letter-spacing: 0px;
             background-color: transparent;
-            color: #000000;
+            color: var(--text-main);
             text-align: left;
+            font-family: 'Consolas', 'Courier New', monospace;
         }
 
         .editor-wrapper.v-middle textarea,
@@ -234,7 +302,7 @@
             max-height: 100%;
         }
 
-        /* Animasi Kedap Kedip */
+        /* Flashing Alert Animation */
         @keyframes custom-flashing {
             0% { background-color: var(--flash-color-1); }
             100% { background-color: var(--flash-color-2); }
@@ -245,14 +313,14 @@
             animation: custom-flashing 0.4s infinite alternate !important;
         }
 
-        /* Area Timer */
+        /* Timer Display Area */
         .timer-window {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #ffffff;
-            color: #000000;
+            background-color: var(--bg-card);
+            color: var(--text-main);
             padding: 20px;
             transition: background-color 0.2s, color 0.2s;
             cursor: pointer;
@@ -266,41 +334,44 @@
 
         .large-timer-display {
             font-size: 400px;
-            font-family: monospace;
+            font-family: 'Consolas', 'Courier New', monospace;
             font-weight: bold;
-            line-height: 1.2;
+            line-height: 1.1;
         }
 
-        /* Status Bar Bawah */
+        /* Bottom Status Bar */
         .status-bar {
-            background-color: #f0f0f0;
-            border-top: 1px solid #dcdcdc;
-            padding: 4px 15px;
-            font-size: 0.8rem;
-            color: #555555;
+            background-color: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            padding: 6px 16px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
             display: flex;
             justify-content: space-between;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
 
-    <!-- Navigasi Utama -->
-    <div class="tab-bar">
-        <div class="tab-group">
+    <!-- Header Navigation Bar -->
+    <div class="header-bar">
+        <div class="tab-segmented">
             <button class="tab-btn active" id="tabEditorBtn" onclick="setLayoutMode('editor')">📝 Jendela Ketik</button>
             <button class="tab-btn" id="tabTimerBtn" onclick="setLayoutMode('timer')">⏱️ Jendela Timer</button>
         </div>
 
         <div class="layout-switcher">
-            <label>Mode Tampilan:</label>
-            <button class="btn-layout active" id="modeEditorBtn" onclick="setLayoutMode('editor')">📄 Full Ketik</button>
-            <button class="btn-layout" id="modeTimerBtn" onclick="setLayoutMode('timer')">⏱️ Full Timer</button>
-            <button class="btn-layout" id="modeSplitBtn" onclick="setLayoutMode('split')">📑 Split (2 Tab)</button>
+            <span class="layout-label">Tampilan:</span>
+            <div class="tab-segmented">
+                <button class="btn-layout active" id="modeEditorBtn" onclick="setLayoutMode('editor')">Full Ketik</button>
+                <button class="btn-layout" id="modeTimerBtn" onclick="setLayoutMode('timer')">Full Timer</button>
+                <button class="btn-layout" id="modeSplitBtn" onclick="setLayoutMode('split')">Split (2 Tab)</button>
+            </div>
         </div>
     </div>
 
-    <!-- Workspace Utama -->
+    <!-- Main Workspace Container -->
     <div class="workspace mode-editor" id="workspace">
 
         <!-- JENDELA KETIK -->
@@ -317,14 +388,14 @@
 
                 <div class="menu-group">
                     <div class="control-item">
-                        <label>Rata H:</label>
+                        <label>H:</label>
                         <button class="btn btn-align active" id="alignLeft" onclick="setTextAlign('left')">⬅</button>
                         <button class="btn btn-align" id="alignCenter" onclick="setTextAlign('center')">↔</button>
                         <button class="btn btn-align" id="alignRight" onclick="setTextAlign('right')">➡</button>
                     </div>
 
                     <div class="control-item">
-                        <label>Rata V:</label>
+                        <label>V:</label>
                         <button class="btn btn-align active" id="vAlignTop" onclick="setVerticalAlign('top')">⬆</button>
                         <button class="btn btn-align" id="vAlignCenter" onclick="setVerticalAlign('middle')">↕</button>
                         <button class="btn btn-align" id="vAlignBottom" onclick="setVerticalAlign('bottom')">⬇</button>
@@ -458,7 +529,7 @@
         let currentAlign = 'left';
         let currentVAlign = 'top';
 
-        // Drag Resizer
+        // Drag Resizer Logic
         let isDragging = false;
 
         resizer.addEventListener('mousedown', function(e) {
