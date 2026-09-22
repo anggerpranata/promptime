@@ -41,7 +41,7 @@
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: space-between;
             padding: 8px 16px;
             gap: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -226,6 +226,16 @@
             background-color: var(--danger-hover);
         }
 
+        .btn-display {
+            background-color: #eff6ff;
+            color: var(--primary);
+            border-color: #bfdbfe;
+        }
+
+        .btn-display:hover {
+            background-color: #dbeafe;
+        }
+
         /* Inputs & Color Pickers */
         input[type="number"], input[type="text"] {
             padding: 4px 8px;
@@ -309,7 +319,8 @@
         }
 
         .editor-wrapper.flashing-active,
-        .timer-window.time-up {
+        .timer-window.time-up,
+        body.time-up-external {
             animation: custom-flashing 0.4s infinite alternate !important;
         }
 
@@ -356,6 +367,8 @@
 
     <!-- Header Navigation Bar -->
     <div class="header-bar">
+        <button class="btn btn-display" onclick="openOnSecondScreen()">🖥️ Layar 2 (Fullscreen)</button>
+
         <div class="layout-switcher">
             <span class="layout-label">Pilih Tampilan:</span>
             <div class="tab-segmented">
@@ -428,7 +441,7 @@
             </div>
         </div>
 
-        <!-- RESIZER BAR (PEMBATAS BISA DIGESER) -->
+        <!-- RESIZER BAR -->
         <div class="resizer" id="resizer"></div>
 
         <!-- JENDELA TIMER -->
@@ -512,6 +525,120 @@
         let currentAlign = 'left';
         let currentVAlign = 'top';
 
+        let externalWindow = null;
+        const isExternalView = new URLSearchParams(window.location.search).has('external');
+
+        // MODE TAMPILAN PROYEKSI/LAYAR KEDUA (Jika dibuka sebagai layar 2)
+        if (isExternalView) {
+            document.querySelector('.header-bar').style.display = 'none';
+            document.querySelectorAll('.control-bar').forEach(el => el.style.display = 'none');
+            document.querySelector('.status-bar').style.display = 'none';
+            notepad.readOnly = true;
+
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'webExternalSync') {
+                    syncFromStorage();
+                }
+            });
+        }
+
+        // BUKA MONITOR KEDUA DENGAN WINDOW MANAGEMENT API
+        async function openOnSecondScreen() {
+            let left = window.screen.width; // Default menggeser ke kanan layar pertama
+            let top = 0;
+            let width = 1200;
+            let height = 800;
+
+            if ('getScreenDetails' in window) {
+                try {
+                    const screenDetails = await window.getScreenDetails();
+                    if (screenDetails.screens.length > 1) {
+                        const secondScreen = screenDetails.screens.find(s => !s.isPrimary) || screenDetails.screens[1];
+                        left = secondScreen.left;
+                        top = secondScreen.top;
+                        width = secondScreen.width;
+                        height = secondScreen.height;
+                    }
+                } catch (e) {
+                    console.log("Izin deteksi layar tidak diberikan, menggunakan estimasi posisi layar 2.");
+                }
+            }
+
+            const features = `left=${left},top=${top},width=${width},height=${height},menubar=no,toolbar=no,location=no,status=no`;
+            externalWindow = window.open(window.location.href + '?external=true', 'LayarKeduaWindow', features);
+            
+            // Mencoba otomatis memicu Fullscreen pada jendela yang baru dibuka
+            setTimeout(() => {
+                broadcastSync();
+            }, 500);
+        }
+
+        function broadcastSync() {
+            const syncData = {
+                text: notepad.value,
+                fontSize: fontSizeInput.value,
+                timerFontSize: timerFontSizeInput.value,
+                textColor: textColorInput.value,
+                bgColor: bgColorInput.value,
+                letterSpacing: letterSpacingInput.value,
+                lineHeight: lineHeightInput.value,
+                textAlign: currentAlign,
+                vAlign: currentVAlign,
+                layoutMode: localStorage.getItem('webLayoutMode') || 'editor',
+                timerText: largeTimerDisplay.textContent,
+                isTimeUp: timerWindow.classList.contains('time-up'),
+                isFlashing: isFlashingActive,
+                flash1: flashColor1Input.value,
+                flash2: flashColor2Input.value,
+                splitWidth: localStorage.getItem('webSplitWidth') || '50',
+                timestamp: Date.now()
+            };
+            localStorage.setItem('webExternalSync', JSON.stringify(syncData));
+        }
+
+        function syncFromStorage() {
+            const raw = localStorage.getItem('webExternalSync');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+
+            notepad.value = data.text;
+            fontSizeInput.value = data.fontSize;
+            timerFontSizeInput.value = data.timerFontSize;
+            textColorInput.value = data.textColor;
+            bgColorInput.value = data.bgColor;
+            letterSpacingInput.value = data.letterSpacing;
+            lineHeightInput.value = data.lineHeight;
+            flashColor1Input.value = data.flash1;
+            flashColor2Input.value = data.flash2;
+
+            largeTimerDisplay.textContent = data.timerText;
+
+            setTextAlign(data.textAlign);
+            setVerticalAlign(data.vAlign);
+            setLayoutMode(data.layoutMode);
+
+            if (data.layoutMode === 'split' && data.splitWidth) {
+                editorTab.style.width = data.splitWidth + '%';
+            }
+
+            applyStyles();
+            applyTimerStyles();
+
+            if (data.isFlashing) {
+                editorWrapper.style.setProperty('--flash-color-1', data.flash1);
+                editorWrapper.style.setProperty('--flash-color-2', data.flash2);
+                editorWrapper.classList.add('flashing-active');
+            } else {
+                editorWrapper.classList.remove('flashing-active');
+            }
+
+            if (data.isTimeUp) {
+                timerWindow.classList.add('time-up');
+            } else {
+                timerWindow.classList.remove('time-up');
+            }
+        }
+
         // Drag Resizer Logic
         let isDragging = false;
 
@@ -536,6 +663,7 @@
 
             editorTab.style.width = newEditorWidthPercent + '%';
             localStorage.setItem('webSplitWidth', newEditorWidthPercent);
+            broadcastSync();
         });
 
         document.addEventListener('mouseup', function() {
@@ -569,10 +697,16 @@
 
             localStorage.setItem('webLayoutMode', mode);
             autoResizeTextarea();
+            broadcastSync();
         }
 
         // Inisialisasi Aplikasi
         window.onload = function() {
+            if (isExternalView) {
+                syncFromStorage();
+                return;
+            }
+
             const savedText = localStorage.getItem('webNotepadText');
             if (savedText !== null) notepad.value = savedText;
 
@@ -627,6 +761,7 @@
             if (align === 'right') document.getElementById('alignRight').classList.add('active');
 
             localStorage.setItem('webNotepadAlign', align);
+            broadcastSync();
         }
 
         // Rataan Teks Vertikal
@@ -645,6 +780,7 @@
 
             localStorage.setItem('webNotepadVAlign', vAlign);
             autoResizeTextarea();
+            broadcastSync();
         }
 
         function autoResizeTextarea() {
@@ -664,7 +800,6 @@
             notepad.style.letterSpacing = letterSpacingInput.value + 'px';
             notepad.style.lineHeight = lineHeightInput.value;
 
-            // Sinkronisasi Otomatis Warna Font & Latar ke Jendela Timer
             timerWindow.style.color = textColorInput.value;
             timerWindow.style.backgroundColor = bgColorInput.value;
 
@@ -675,6 +810,7 @@
             localStorage.setItem('webNotepadLineHeight', lineHeightInput.value);
             
             autoResizeTextarea();
+            broadcastSync();
         }
 
         fontSizeInput.addEventListener('input', applyStyles);
@@ -693,6 +829,7 @@
             autoSaveStatus.textContent = "Tersimpan otomatis";
 
             autoResizeTextarea();
+            broadcastSync();
         }
 
         // Sakelar Lampu Peringatan
@@ -713,13 +850,13 @@
                 lightAlertBtn.textContent = '💡 Lampu: OFF';
                 lightAlertBtn.classList.remove('active');
             }
+            broadcastSync();
         }
 
         // Terapkan Gaya Timer
         function applyTimerStyles() {
             largeTimerDisplay.style.fontSize = timerFontSizeInput.value + 'px';
             
-            // Mengikuti warna jendela ketik
             timerWindow.style.color = textColorInput.value;
             timerWindow.style.backgroundColor = bgColorInput.value;
 
@@ -727,6 +864,7 @@
             timerWindow.style.setProperty('--flash-color-2', flashColor2Input.value);
 
             localStorage.setItem('webTimerFontSize', timerFontSizeInput.value);
+            broadcastSync();
         }
 
         timerFontSizeInput.addEventListener('input', applyTimerStyles);
@@ -747,6 +885,7 @@
             const m = Math.floor(secs / 60);
             const s = secs % 60;
             largeTimerDisplay.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            broadcastSync();
         }
 
         timerMinsInput.addEventListener('change', initTimerDisplay);
@@ -786,6 +925,7 @@
                     applyTimerStyles();
                     timerWindow.classList.add('time-up');
                     playBeepSound();
+                    broadcastSync();
                 }
             }, 1000);
         }
@@ -798,6 +938,7 @@
             timerBtn.classList.add('btn-start');
             resetTimerFlashing();
             initTimerDisplay();
+            broadcastSync();
         }
 
         function resetTimerFlashing() {
@@ -805,6 +946,7 @@
                 timerWindow.classList.remove('time-up');
                 applyTimerStyles();
                 initTimerDisplay();
+                broadcastSync();
             }
         }
 
