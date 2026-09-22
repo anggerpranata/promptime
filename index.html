@@ -41,7 +41,7 @@
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            justify-content: flex-end; /* Memindahkan tombol ke pojok kanan */
+            justify-content: flex-end;
             padding: 8px 16px;
             gap: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -354,7 +354,7 @@
 </head>
 <body>
 
-    <!-- Header Navigation Bar (Hanya Menu Kanan Atas) -->
+    <!-- Header Navigation Bar -->
     <div class="header-bar">
         <div class="layout-switcher">
             <span class="layout-label">Pilih Tampilan:</span>
@@ -447,16 +447,6 @@
                     </div>
 
                     <div class="control-item">
-                        <label for="timerTextColor">Font:</label>
-                        <input type="color" id="timerTextColor" value="#000000">
-                    </div>
-
-                    <div class="control-item">
-                        <label for="timerBgColor">Latar:</label>
-                        <input type="color" id="timerBgColor" value="#ffffff">
-                    </div>
-
-                    <div class="control-item">
                         <label for="flashColor1">Kedip 1:</label>
                         <input type="color" id="flashColor1" value="#ff0000">
                         <label for="flashColor2">Kedip 2:</label>
@@ -508,8 +498,6 @@
         const timerMinsInput = document.getElementById('timerMins');
         const timerSecsInput = document.getElementById('timerSecs');
         const timerFontSizeInput = document.getElementById('timerFontSize');
-        const timerTextColorInput = document.getElementById('timerTextColor');
-        const timerBgColorInput = document.getElementById('timerBgColor');
         const flashColor1Input = document.getElementById('flashColor1');
         const flashColor2Input = document.getElementById('flashColor2');
         const alertMessageInput = document.getElementById('alertMessage');
@@ -668,13 +656,17 @@
             }
         }
 
-        // Terapkan Gaya Editor
+        // Terapkan Gaya Editor & Otomatis Sinkronkan Ke Timer
         function applyStyles() {
             notepad.style.fontSize = fontSizeInput.value + 'px';
             notepad.style.color = textColorInput.value;
             editorWrapper.style.backgroundColor = bgColorInput.value;
             notepad.style.letterSpacing = letterSpacingInput.value + 'px';
             notepad.style.lineHeight = lineHeightInput.value;
+
+            // Sinkronisasi Otomatis Warna Font & Latar ke Jendela Timer
+            timerWindow.style.color = textColorInput.value;
+            timerWindow.style.backgroundColor = bgColorInput.value;
 
             localStorage.setItem('webNotepadFontSize', fontSizeInput.value);
             localStorage.setItem('webNotepadTextColor', textColorInput.value);
@@ -726,8 +718,10 @@
         // Terapkan Gaya Timer
         function applyTimerStyles() {
             largeTimerDisplay.style.fontSize = timerFontSizeInput.value + 'px';
-            timerWindow.style.color = timerTextColorInput.value;
-            timerWindow.style.backgroundColor = timerBgColorInput.value;
+            
+            // Mengikuti warna jendela ketik
+            timerWindow.style.color = textColorInput.value;
+            timerWindow.style.backgroundColor = bgColorInput.value;
 
             timerWindow.style.setProperty('--flash-color-1', flashColor1Input.value);
             timerWindow.style.setProperty('--flash-color-2', flashColor2Input.value);
@@ -736,8 +730,6 @@
         }
 
         timerFontSizeInput.addEventListener('input', applyTimerStyles);
-        timerTextColorInput.addEventListener('input', applyTimerStyles);
-        timerBgColorInput.addEventListener('input', applyTimerStyles);
         flashColor1Input.addEventListener('input', applyTimerStyles);
         flashColor2Input.addEventListener('input', applyTimerStyles);
 
