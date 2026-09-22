@@ -41,7 +41,7 @@
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end; /* Memindahkan tombol ke pojok kanan */
             padding: 8px 16px;
             gap: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -56,7 +56,7 @@
             gap: 2px;
         }
 
-        .tab-btn, .btn-layout {
+        .btn-layout {
             border: none;
             background: transparent;
             padding: 6px 14px;
@@ -69,11 +69,11 @@
             white-space: nowrap;
         }
 
-        .tab-btn:hover, .btn-layout:hover {
+        .btn-layout:hover {
             color: var(--text-main);
         }
 
-        .tab-btn.active, .btn-layout.active {
+        .btn-layout.active {
             background-color: var(--bg-card);
             color: var(--primary);
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
@@ -82,7 +82,7 @@
         .layout-switcher {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
 
         .layout-label {
@@ -354,19 +354,14 @@
 </head>
 <body>
 
-    <!-- Header Navigation Bar -->
+    <!-- Header Navigation Bar (Hanya Menu Kanan Atas) -->
     <div class="header-bar">
-        <div class="tab-segmented">
-            <button class="tab-btn active" id="tabEditorBtn" onclick="setLayoutMode('editor')">📝 Jendela Ketik</button>
-            <button class="tab-btn" id="tabTimerBtn" onclick="setLayoutMode('timer')">⏱️ Jendela Timer</button>
-        </div>
-
         <div class="layout-switcher">
-            <span class="layout-label">Tampilan:</span>
+            <span class="layout-label">Pilih Tampilan:</span>
             <div class="tab-segmented">
-                <button class="btn-layout active" id="modeEditorBtn" onclick="setLayoutMode('editor')">Full Ketik</button>
-                <button class="btn-layout" id="modeTimerBtn" onclick="setLayoutMode('timer')">Full Timer</button>
-                <button class="btn-layout" id="modeSplitBtn" onclick="setLayoutMode('split')">Split (2 Tab)</button>
+                <button class="btn-layout active" id="modeEditorBtn" onclick="setLayoutMode('editor')">📝 Full Ketik</button>
+                <button class="btn-layout" id="modeTimerBtn" onclick="setLayoutMode('timer')">⏱️ Full Timer</button>
+                <button class="btn-layout" id="modeSplitBtn" onclick="setLayoutMode('split')">📑 Split (2 Jendela)</button>
             </div>
         </div>
     </div>
@@ -569,21 +564,15 @@
             workspace.classList.remove('mode-editor', 'mode-timer', 'mode-split');
             workspace.classList.add('mode-' + mode);
 
-            document.getElementById('tabEditorBtn').classList.remove('active');
-            document.getElementById('tabTimerBtn').classList.remove('active');
             document.getElementById('modeEditorBtn').classList.remove('active');
             document.getElementById('modeTimerBtn').classList.remove('active');
             document.getElementById('modeSplitBtn').classList.remove('active');
 
             if (mode === 'editor') {
-                document.getElementById('tabEditorBtn').classList.add('active');
                 document.getElementById('modeEditorBtn').classList.add('active');
             } else if (mode === 'timer') {
-                document.getElementById('tabTimerBtn').classList.add('active');
                 document.getElementById('modeTimerBtn').classList.add('active');
             } else if (mode === 'split') {
-                document.getElementById('tabEditorBtn').classList.add('active');
-                document.getElementById('tabTimerBtn').classList.add('active');
                 document.getElementById('modeSplitBtn').classList.add('active');
 
                 const savedWidth = localStorage.getItem('webSplitWidth');
