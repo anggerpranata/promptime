@@ -148,7 +148,7 @@
         .control-item {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             font-size: 0.8rem;
             color: var(--text-muted);
             font-weight: 500;
@@ -161,7 +161,7 @@
         .btn {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
-            padding: 5px 12px;
+            padding: 5px 10px;
             font-size: 0.8rem;
             cursor: pointer;
             border-radius: 6px;
@@ -236,9 +236,9 @@
             background-color: #dbeafe;
         }
 
-        /* Inputs, Select & Color Pickers */
+        /* Inputs & Color Pickers */
         input[type="number"], input[type="text"], select {
-            padding: 4px 7px;
+            padding: 4px 6px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
             outline: none;
@@ -253,20 +253,8 @@
         }
 
         input[type="number"] {
-            width: 50px;
+            width: 48px;
             font-family: monospace;
-        }
-
-        input[type="checkbox"] {
-            cursor: pointer;
-            width: 14px;
-            height: 14px;
-            accent-color: var(--primary);
-        }
-
-        select {
-            font-weight: 600;
-            cursor: pointer;
         }
 
         input[type="color"] {
@@ -347,31 +335,20 @@
             padding: 20px;
             transition: background-color 0.2s, color 0.2s;
             cursor: pointer;
-            overflow: hidden;
         }
 
         .timer-display-box {
             text-align: center;
             word-break: break-word;
-            max-width: 98%;
+            max-width: 95%;
         }
 
         .large-timer-display {
-            font-size: 220px;
+            font-size: 300px;
             font-family: 'Consolas', 'Courier New', monospace;
             font-weight: bold;
             line-height: 1.1;
             font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-        }
-
-        .large-timer-display.message-mode {
-            white-space: normal;
-        }
-
-        .ms-part {
-            font-size: 0.65em;
-            opacity: 0.9;
         }
 
         /* Bottom Status Bar */
@@ -472,29 +449,29 @@
         <div id="timerTab" class="tab-panel">
             <div class="control-bar">
                 <div class="menu-group">
+                    <!-- Pilihan Mode Timer -->
                     <div class="control-item">
-                        <label for="timerDirection">Mode:</label>
-                        <select id="timerDirection" onchange="handleDirectionChange()">
-                            <option value="down">⏳ Mundur</option>
-                            <option value="up">⏱️ Maju</option>
+                        <select id="timerMode" onchange="changeTimerMode()">
+                            <option value="down">⏳ Mundur (Countdown)</option>
+                            <option value="up">⏱️ Maju (Count Up)</option>
                         </select>
                     </div>
 
-                    <div class="control-item">
-                        <label id="durationLabel">Durasi:</label>
+                    <!-- Durasi Jam, Menit, Detik -->
+                    <div class="control-item" id="durationInputs">
                         <input type="number" id="timerHours" value="0" min="0" max="99" title="Jam"> j
                         <input type="number" id="timerMins" value="1" min="0" max="59" title="Menit"> m
                         <input type="number" id="timerSecs" value="0" min="0" max="59" title="Detik"> d
                     </div>
 
-                    <div class="control-item" title="Tampilkan Milidetik">
-                        <input type="checkbox" id="showMsToggle" checked onchange="handleMsToggle()">
-                        <label for="showMsToggle">ms</label>
+                    <!-- Opsi Tampilan Milidetik -->
+                    <div class="control-item">
+                        <button class="btn btn-align active" id="toggleMsBtn" onclick="toggleMsDisplay()" title="Tampilkan/Sembunyikan Milidetik">.ms</button>
                     </div>
 
                     <div class="control-item">
                         <label for="timerFontSize">Ukuran:</label>
-                        <input type="number" id="timerFontSize" value="220" min="20" max="800">
+                        <input type="number" id="timerFontSize" value="250" min="20" max="800">
                     </div>
 
                     <div class="control-item">
@@ -506,19 +483,19 @@
                 </div>
 
                 <div class="menu-group">
-                    <div class="control-item">
+                    <div class="control-item" id="alertMsgGroup">
                         <label for="alertMessage">Pesan:</label>
-                        <input type="text" id="alertMessage" value="WAKTU HABIS!" style="width: 115px;">
+                        <input type="text" id="alertMessage" value="WAKTU HABIS!" style="width: 110px;">
                     </div>
 
                     <button class="btn btn-start" id="timerBtn" onclick="toggleTimer()">Start</button>
-                    <button class="btn" onclick="resetTimer()">Reset</button>
+                    <button class="btn" id="resetTimerBtn" onclick="resetTimer()">Reset</button>
                 </div>
             </div>
 
             <div class="timer-window" id="timerWindow" onclick="resetTimerFlashing()">
                 <div class="timer-display-box">
-                    <div class="large-timer-display" id="largeTimerDisplay">00:01:00<span class="ms-part">.00</span></div>
+                    <div class="large-timer-display" id="largeTimerDisplay">00:01:00.00</div>
                 </div>
             </div>
         </div>
@@ -547,12 +524,10 @@
         const lineHeightInput = document.getElementById('lineHeight');
 
         const timerWindow = document.getElementById('timerWindow');
-        const timerDirectionSelect = document.getElementById('timerDirection');
-        const durationLabel = document.getElementById('durationLabel');
+        const timerModeSelect = document.getElementById('timerMode');
         const timerHoursInput = document.getElementById('timerHours');
         const timerMinsInput = document.getElementById('timerMins');
         const timerSecsInput = document.getElementById('timerSecs');
-        const showMsToggle = document.getElementById('showMsToggle');
         const timerFontSizeInput = document.getElementById('timerFontSize');
         const flashColor1Input = document.getElementById('flashColor1');
         const flashColor2Input = document.getElementById('flashColor2');
@@ -560,11 +535,18 @@
         const largeTimerDisplay = document.getElementById('largeTimerDisplay');
         const timerBtn = document.getElementById('timerBtn');
         const lightAlertBtn = document.getElementById('lightAlertBtn');
+        const toggleMsBtn = document.getElementById('toggleMsBtn');
 
-        let timerInterval = null;
-        let currentMs = 0;
-        let lastTickTime = 0;
+        let timerRafId = null;
         let isTimerRunning = false;
+        let showMilliseconds = true;
+        
+        // Variabel presisi tinggi (dalam milidetik)
+        let remainingMs = 60000;
+        let elapsedMs = 0;
+        let lastFrameTime = 0;
+        let lastSyncTime = 0;
+
         let isFlashingActive = false;
         let currentAlign = 'left';
         let currentVAlign = 'top';
@@ -604,7 +586,7 @@
                         height = secondScreen.height;
                     }
                 } catch (e) {
-                    console.log("Izin deteksi layar tidak diberikan, menggunakan estimasi posisi layar 2.");
+                    console.log("Izin deteksi layar tidak diberikan, menggunakan estimasi layar 2.");
                 }
             }
 
@@ -629,8 +611,7 @@
                 textAlign: currentAlign,
                 vAlign: currentVAlign,
                 layoutMode: localStorage.getItem('webLayoutMode') || 'editor',
-                timerHtml: largeTimerDisplay.innerHTML,
-                isMessageMode: largeTimerDisplay.classList.contains('message-mode'),
+                timerText: largeTimerDisplay.textContent,
                 isTimeUp: timerWindow.classList.contains('time-up'),
                 isFlashing: isFlashingActive,
                 flash1: flashColor1Input.value,
@@ -656,12 +637,7 @@
             flashColor1Input.value = data.flash1;
             flashColor2Input.value = data.flash2;
 
-            largeTimerDisplay.innerHTML = data.timerHtml;
-            if (data.isMessageMode) {
-                largeTimerDisplay.classList.add('message-mode');
-            } else {
-                largeTimerDisplay.classList.remove('message-mode');
-            }
+            largeTimerDisplay.textContent = data.timerText;
 
             setTextAlign(data.textAlign);
             setVerticalAlign(data.vAlign);
@@ -692,7 +668,7 @@
         // Drag Resizer Logic
         let isDragging = false;
 
-        resizer.addEventListener('mousedown', function(e) {
+        resizer.addEventListener('mousedown', function() {
             isDragging = true;
             resizer.classList.add('dragging');
             document.body.style.cursor = 'col-resize';
@@ -701,13 +677,11 @@
 
         document.addEventListener('mousemove', function(e) {
             if (!isDragging) return;
-            
             const containerOffsetLeft = workspace.offsetLeft;
             const pointerRelativeX = e.clientX - containerOffsetLeft;
             const containerWidth = workspace.clientWidth;
             
             let newEditorWidthPercent = (pointerRelativeX / containerWidth) * 100;
-
             if (newEditorWidthPercent < 15) newEditorWidthPercent = 15;
             if (newEditorWidthPercent > 85) newEditorWidthPercent = 85;
 
@@ -740,14 +714,15 @@
                 document.getElementById('modeTimerBtn').classList.add('active');
             } else if (mode === 'split') {
                 document.getElementById('modeSplitBtn').classList.add('active');
-
                 const savedWidth = localStorage.getItem('webSplitWidth');
                 editorTab.style.width = savedWidth ? savedWidth + '%' : '50%';
             }
 
-            localStorage.setItem('webLayoutMode', mode);
+            if (!isExternalView) {
+                localStorage.setItem('webLayoutMode', mode);
+                broadcastSync();
+            }
             autoResizeTextarea();
-            broadcastSync();
         }
 
         // Inisialisasi Aplikasi
@@ -764,7 +739,7 @@
             fontSizeInput.value = savedFontSize ? savedFontSize : "200";
 
             const savedTimerFontSize = localStorage.getItem('webTimerFontSize');
-            timerFontSizeInput.value = savedTimerFontSize ? savedTimerFontSize : "220";
+            timerFontSizeInput.value = savedTimerFontSize ? savedTimerFontSize : "250";
 
             const savedTextColor = localStorage.getItem('webNotepadTextColor');
             if (savedTextColor) textColorInput.value = savedTextColor;
@@ -785,23 +760,8 @@
             if (savedVAlign) setVerticalAlign(savedVAlign);
 
             const savedLayoutMode = localStorage.getItem('webLayoutMode');
-            if (savedLayoutMode) {
-                setLayoutMode(savedLayoutMode);
-            } else {
-                setLayoutMode('editor');
-            }
+            setLayoutMode(savedLayoutMode || 'editor');
 
-            const savedDirection = localStorage.getItem('webTimerDirection');
-            if (savedDirection) {
-                timerDirectionSelect.value = savedDirection;
-            }
-
-            const savedShowMs = localStorage.getItem('webTimerShowMs');
-            if (savedShowMs !== null) {
-                showMsToggle.checked = savedShowMs === 'true';
-            }
-
-            updateDirectionUI();
             applyStyles();
             applyTimerStyles();
             updateStats();
@@ -821,8 +781,10 @@
             if (align === 'center') document.getElementById('alignCenter').classList.add('active');
             if (align === 'right') document.getElementById('alignRight').classList.add('active');
 
-            localStorage.setItem('webNotepadAlign', align);
-            broadcastSync();
+            if (!isExternalView) {
+                localStorage.setItem('webNotepadAlign', align);
+                broadcastSync();
+            }
         }
 
         // Rataan Teks Vertikal
@@ -839,9 +801,11 @@
             if (vAlign === 'middle') document.getElementById('vAlignCenter').classList.add('active');
             if (vAlign === 'bottom') document.getElementById('vAlignBottom').classList.add('active');
 
-            localStorage.setItem('webNotepadVAlign', vAlign);
+            if (!isExternalView) {
+                localStorage.setItem('webNotepadVAlign', vAlign);
+                broadcastSync();
+            }
             autoResizeTextarea();
-            broadcastSync();
         }
 
         function autoResizeTextarea() {
@@ -853,7 +817,7 @@
             }
         }
 
-        // Terapkan Gaya Editor & Otomatis Sinkronkan Ke Timer
+        // Terapkan Gaya Editor & Sinkronkan Ke Timer
         function applyStyles() {
             notepad.style.fontSize = fontSizeInput.value + 'px';
             notepad.style.color = textColorInput.value;
@@ -864,14 +828,15 @@
             timerWindow.style.color = textColorInput.value;
             timerWindow.style.backgroundColor = bgColorInput.value;
 
-            localStorage.setItem('webNotepadFontSize', fontSizeInput.value);
-            localStorage.setItem('webNotepadTextColor', textColorInput.value);
-            localStorage.setItem('webNotepadBgColor', bgColorInput.value);
-            localStorage.setItem('webNotepadLetterSpacing', letterSpacingInput.value);
-            localStorage.setItem('webNotepadLineHeight', lineHeightInput.value);
-            
+            if (!isExternalView) {
+                localStorage.setItem('webNotepadFontSize', fontSizeInput.value);
+                localStorage.setItem('webNotepadTextColor', textColorInput.value);
+                localStorage.setItem('webNotepadBgColor', bgColorInput.value);
+                localStorage.setItem('webNotepadLetterSpacing', letterSpacingInput.value);
+                localStorage.setItem('webNotepadLineHeight', lineHeightInput.value);
+                broadcastSync();
+            }
             autoResizeTextarea();
-            broadcastSync();
         }
 
         fontSizeInput.addEventListener('input', applyStyles);
@@ -917,90 +882,226 @@
         // Terapkan Gaya Timer
         function applyTimerStyles() {
             largeTimerDisplay.style.fontSize = timerFontSizeInput.value + 'px';
-            
             timerWindow.style.color = textColorInput.value;
             timerWindow.style.backgroundColor = bgColorInput.value;
 
             timerWindow.style.setProperty('--flash-color-1', flashColor1Input.value);
             timerWindow.style.setProperty('--flash-color-2', flashColor2Input.value);
 
-            localStorage.setItem('webTimerFontSize', timerFontSizeInput.value);
-            broadcastSync();
+            if (!isExternalView) {
+                localStorage.setItem('webTimerFontSize', timerFontSizeInput.value);
+                broadcastSync();
+            }
         }
 
         timerFontSizeInput.addEventListener('input', applyTimerStyles);
         flashColor1Input.addEventListener('input', applyTimerStyles);
         flashColor2Input.addEventListener('input', applyTimerStyles);
 
-        // Logika Mode Countdown & Count-Up (Jam : Menit : Detik . Milidetik)
-        function updateDirectionUI() {
-            const direction = timerDirectionSelect.value;
-            durationLabel.textContent = direction === 'down' ? 'Durasi:' : 'Batas:';
+        // ==========================================
+        // LOGIKA TIMER (COUNTDOWN & COUNT UP + MS)
+        // ==========================================
+        function changeTimerMode() {
+            stopTimer();
+            const mode = timerModeSelect.value;
+            if (mode === 'up') {
+                document.getElementById('durationInputs').style.opacity = '0.4';
+                document.getElementById('alertMsgGroup').style.opacity = '0.4';
+            } else {
+                document.getElementById('durationInputs').style.opacity = '1';
+                document.getElementById('alertMsgGroup').style.opacity = '1';
+            }
+            resetTimer();
         }
 
-        function handleDirectionChange() {
-            localStorage.setItem('webTimerDirection', timerDirectionSelect.value);
-            updateDirectionUI();
+        function toggleMsDisplay() {
+            showMilliseconds = !showMilliseconds;
+            toggleMsBtn.classList.toggle('active', showMilliseconds);
             if (!isTimerRunning) {
-                resetTimer();
+                const ms = timerModeSelect.value === 'down' ? remainingMs : elapsedMs;
+                formatTimerDisplay(ms, true);
             }
-        }
-
-        function handleMsToggle() {
-            localStorage.setItem('webTimerShowMs', showMsToggle.checked);
-            if (!timerWindow.classList.contains('time-up')) {
-                formatTimerDisplay(currentMs);
-            }
-        }
-
-        function getTargetDurationMs() {
-            const h = parseInt(timerHoursInput.value) || 0;
-            const m = parseInt(timerMinsInput.value) || 0;
-            const s = parseInt(timerSecsInput.value) || 0;
-            return ((h * 3600) + (m * 60) + s) * 1000;
         }
 
         function initTimerDisplay() {
-            if (!isTimerRunning) {
-                const direction = timerDirectionSelect.value;
-                if (direction === 'down') {
-                    currentMs = getTargetDurationMs();
-                } else {
-                    currentMs = 0;
-                }
-                largeTimerDisplay.classList.remove('message-mode');
-                formatTimerDisplay(currentMs);
+            const mode = timerModeSelect.value;
+            if (mode === 'down') {
+                const h = parseInt(timerHoursInput.value) || 0;
+                const m = parseInt(timerMinsInput.value) || 0;
+                const s = parseInt(timerSecsInput.value) || 0;
+                remainingMs = ((h * 3600) + (m * 60) + s) * 1000;
+                formatTimerDisplay(remainingMs, true);
+            } else {
+                elapsedMs = 0;
+                formatTimerDisplay(0, true);
             }
         }
 
-        function formatTimerDisplay(msValue) {
-            const safeMs = Math.max(0, Math.floor(msValue));
-            const totalSeconds = Math.floor(safeMs / 1000);
+        function resetTimer() {
+            stopTimer();
+            resetTimerFlashing();
+            initTimerDisplay();
+        }
+
+        function formatTimerDisplay(ms, forceSync = false) {
+            if (ms < 0) ms = 0;
+            const totalSeconds = Math.floor(ms / 1000);
             const h = Math.floor(totalSeconds / 3600);
             const m = Math.floor((totalSeconds % 3600) / 60);
             const s = totalSeconds % 60;
-            const centiseconds = Math.floor((safeMs % 1000) / 10);
+            const centiseconds = Math.floor((ms % 1000) / 10); // 2 digit milidetik (00-99)
 
-            const timeMain = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-            if (showMsToggle.checked) {
-                largeTimerDisplay.innerHTML = `${timeMain}<span class="ms-part">.${String(centiseconds).padStart(2, '0')}</span>`;
-            } else {
-                largeTimerDisplay.textContent = timeMain;
+            let formatted = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            if (showMilliseconds) {
+                formatted += `.${String(centiseconds).padStart(2, '0')}`;
             }
-            broadcastSync();
+
+            largeTimerDisplay.textContent = formatted;
+
+            // Sinkronkan ke layar ke-2 setiap ~50ms agar tetap lancar tanpa membebani storage
+            const now = performance.now();
+            if (forceSync || (now - lastSyncTime > 50)) {
+                broadcastSync();
+                lastSyncTime = now;
+            }
         }
 
-        timerHoursInput.addEventListener('change', () => {
-            if (timerDirectionSelect.value === 'down') initTimerDisplay();
-        });
-        timerMinsInput.addEventListener('change', () => {
-            if (timerDirectionSelect.value === 'down') initTimerDisplay();
-        });
-        timerSecsInput.addEventListener('change', () => {
-            if (timerDirectionSelect.value === 'down') initTimerDisplay();
-        });
+        timerHoursInput.addEventListener('change', () => { if (!isTimerRunning) initTimerDisplay(); });
+        timerMinsInput.addEventListener('change', () => { if (!isTimerRunning) initTimerDisplay(); });
+        timerSecsInput.addEventListener('change', () => { if (!isTimerRunning) initTimerDisplay(); });
 
         function toggleTimer() {
             if (isTimerRunning) {
-                pauseTimer();
-            } else
+                stopTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            resetTimerFlashing();
+            const mode = timerModeSelect.value;
+
+            if (mode === 'down' && remainingMs <= 0) {
+                initTimerDisplay();
+                if (remainingMs <= 0) return;
+            }
+
+            isTimerRunning = true;
+            timerBtn.textContent = 'Pause';
+            timerBtn.classList.remove('btn-start');
+            timerBtn.classList.add('btn-stop');
+
+            lastFrameTime = performance.now();
+            timerRafId = requestAnimationFrame(updateTimerLoop);
+        }
+
+        function updateTimerLoop(now) {
+            if (!isTimerRunning) return;
+
+            const delta = now - lastFrameTime;
+            lastFrameTime = now;
+            const mode = timerModeSelect.value;
+
+            if (mode === 'down') {
+                remainingMs -= delta;
+                if (remainingMs <= 0) {
+                    remainingMs = 0;
+                    isTimerRunning = false;
+                    timerBtn.textContent = 'Start';
+                    timerBtn.classList.remove('btn-stop');
+                    timerBtn.classList.add('btn-start');
+
+                    const customMsg = alertMessageInput.value.trim() || 'WAKTU HABIS!';
+                    largeTimerDisplay.textContent = customMsg;
+                    applyTimerStyles();
+                    timerWindow.classList.add('time-up');
+                    playBeepSound();
+                    broadcastSync();
+                    return;
+                }
+                formatTimerDisplay(remainingMs);
+            } else {
+                // Mode Hitung Maju (Count Up)
+                elapsedMs += delta;
+                formatTimerDisplay(elapsedMs);
+            }
+
+            timerRafId = requestAnimationFrame(updateTimerLoop);
+        }
+
+        function stopTimer() {
+            if (timerRafId) {
+                cancelAnimationFrame(timerRafId);
+                timerRafId = null;
+            }
+            isTimerRunning = false;
+            timerBtn.textContent = 'Start';
+            timerBtn.classList.remove('btn-stop');
+            timerBtn.classList.add('btn-start');
+            broadcastSync();
+        }
+
+        function resetTimerFlashing() {
+            if (timerWindow.classList.contains('time-up')) {
+                timerWindow.classList.remove('time-up');
+                applyTimerStyles();
+                initTimerDisplay();
+                broadcastSync();
+            }
+        }
+
+        function playBeepSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.5);
+            } catch (e) {
+                console.log("Audio alert blocked.");
+            }
+        }
+
+        // Manajemen File
+        function newFile() {
+            if (notepad.value.trim() !== "") {
+                if (confirm("Apakah Anda yakin ingin membuat catatan baru?")) {
+                    notepad.value = "";
+                    updateStats();
+                }
+            }
+        }
+
+        function downloadFile() {
+            const text = notepad.value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const anchor = document.createElement('a');
+            anchor.download = 'Catatan.txt';
+            anchor.href = window.URL.createObjectURL(blob);
+            anchor.click();
+            window.URL.revokeObjectURL(anchor.href);
+        }
+
+        function openFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                notepad.value = e.target.result;
+                updateStats();
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
