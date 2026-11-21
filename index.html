@@ -236,8 +236,8 @@
             background-color: #dbeafe;
         }
 
-        /* Inputs & Color Pickers */
-        input[type="number"], input[type="text"] {
+        /* Inputs, Select & Color Pickers */
+        input[type="number"], input[type="text"], select {
             padding: 4px 8px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
@@ -248,13 +248,18 @@
             transition: border-color 0.15s;
         }
 
-        input[type="number"]:focus, input[type="text"]:focus {
+        input[type="number"]:focus, input[type="text"]:focus, select:focus {
             border-color: var(--primary);
         }
 
         input[type="number"] {
             width: 55px;
             font-family: monospace;
+        }
+
+        select {
+            font-weight: 600;
+            cursor: pointer;
         }
 
         input[type="color"] {
@@ -449,7 +454,15 @@
             <div class="control-bar">
                 <div class="menu-group">
                     <div class="control-item">
-                        <label>Durasi:</label>
+                        <label for="timerDirection">Mode:</label>
+                        <select id="timerDirection" onchange="handleDirectionChange()">
+                            <option value="down">⏳ Mundur (Countdown)</option>
+                            <option value="up">⏱️ Maju (Count-Up)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-item">
+                        <label id="durationLabel">Durasi:</label>
                         <input type="number" id="timerMins" value="1" min="0" max="180"> m
                         <input type="number" id="timerSecs" value="0" min="0" max="59"> s
                     </div>
@@ -473,7 +486,8 @@
                         <input type="text" id="alertMessage" value="WAKTU HABIS!" style="width: 120px;">
                     </div>
 
-                    <button class="btn btn-start" id="timerBtn" onclick="toggleTimer()">Start Countdown</button>
+                    <button class="btn btn-start" id="timerBtn" onclick="toggleTimer()">Start</button>
+                    <button class="btn" onclick="resetTimer()">Reset</button>
                 </div>
             </div>
 
@@ -508,6 +522,8 @@
         const lineHeightInput = document.getElementById('lineHeight');
 
         const timerWindow = document.getElementById('timerWindow');
+        const timerDirectionSelect = document.getElementById('timerDirection');
+        const durationLabel = document.getElementById('durationLabel');
         const timerMinsInput = document.getElementById('timerMins');
         const timerSecsInput = document.getElementById('timerSecs');
         const timerFontSizeInput = document.getElementById('timerFontSize');
@@ -528,7 +544,7 @@
         let externalWindow = null;
         const isExternalView = new URLSearchParams(window.location.search).has('external');
 
-        // MODE TAMPILAN PROYEKSI/LAYAR KEDUA (Jika dibuka sebagai layar 2)
+        // MODE TAMPILAN PROYEKSI/LAYAR KEDUA
         if (isExternalView) {
             document.querySelector('.header-bar').style.display = 'none';
             document.querySelectorAll('.control-bar').forEach(el => el.style.display = 'none');
@@ -544,7 +560,7 @@
 
         // BUKA MONITOR KEDUA DENGAN WINDOW MANAGEMENT API
         async function openOnSecondScreen() {
-            let left = window.screen.width; // Default menggeser ke kanan layar pertama
+            let left = window.screen.width;
             let top = 0;
             let width = 1200;
             let height = 800;
@@ -567,7 +583,6 @@
             const features = `left=${left},top=${top},width=${width},height=${height},menubar=no,toolbar=no,location=no,status=no`;
             externalWindow = window.open(window.location.href + '?external=true', 'LayarKeduaWindow', features);
             
-            // Mencoba otomatis memicu Fullscreen pada jendela yang baru dibuka
             setTimeout(() => {
                 broadcastSync();
             }, 500);
@@ -741,6 +756,12 @@
                 setLayoutMode('editor');
             }
 
+            const savedDirection = localStorage.getItem('webTimerDirection');
+            if (savedDirection) {
+                timerDirectionSelect.value = savedDirection;
+            }
+            updateDirectionUI();
+
             applyStyles();
             applyTimerStyles();
             updateStats();
@@ -871,12 +892,34 @@
         flashColor1Input.addEventListener('input', applyTimerStyles);
         flashColor2Input.addEventListener('input', applyTimerStyles);
 
-        // Logika Timer
+        // Logika Mode Countdown & Count-Up
+        function updateDirectionUI() {
+            const direction = timerDirectionSelect.value;
+            durationLabel.textContent = direction === 'down' ? 'Durasi:' : 'Batas:';
+        }
+
+        function handleDirectionChange() {
+            localStorage.setItem('webTimerDirection', timerDirectionSelect.value);
+            updateDirectionUI();
+            if (!isTimerRunning) {
+                resetTimer();
+            }
+        }
+
+        function getTargetDurationSeconds() {
+            const m = parseInt(timerMinsInput.value) || 0;
+            const s = parseInt(timerSecsInput.value) || 0;
+            return (m * 60) + s;
+        }
+
         function initTimerDisplay() {
             if (!isTimerRunning) {
-                const m = parseInt(timerMinsInput.value) || 0;
-                const s = parseInt(timerSecsInput.value) || 0;
-                totalSeconds = (m * 60) + s;
+                const direction = timerDirectionSelect.value;
+                if (direction === 'down') {
+                    totalSeconds = getTargetDurationSeconds();
+                } else {
+                    totalSeconds = 0;
+                }
                 formatTimerDisplay(totalSeconds);
             }
         }
@@ -888,65 +931,104 @@
             broadcastSync();
         }
 
-        timerMinsInput.addEventListener('change', initTimerDisplay);
-        timerSecsInput.addEventListener('change', initTimerDisplay);
+        timerMinsInput.addEventListener('change', () => {
+            if (timerDirectionSelect.value === 'down') initTimerDisplay();
+        });
+        timerSecsInput.addEventListener('change', () => {
+            if (timerDirectionSelect.value === 'down') initTimerDisplay();
+        });
 
         function toggleTimer() {
             if (isTimerRunning) {
-                stopTimer();
+                pauseTimer();
             } else {
                 startTimer();
             }
         }
 
+        function triggerTimeUpAlert() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerBtn.textContent = 'Start';
+            timerBtn.classList.remove('btn-stop');
+            timerBtn.classList.add('btn-start');
+
+            const customMsg = alertMessageInput.value.trim() || 'WAKTU HABIS!';
+            largeTimerDisplay.textContent = customMsg;
+            applyTimerStyles();
+            timerWindow.classList.add('time-up');
+            playBeepSound();
+            broadcastSync();
+        }
+
         function startTimer() {
-            resetTimerFlashing();
-            if (totalSeconds <= 0) initTimerDisplay();
-            if (totalSeconds <= 0) return;
+            if (timerWindow.classList.contains('time-up')) {
+                timerWindow.classList.remove('time-up');
+                applyTimerStyles();
+                initTimerDisplay();
+            }
+
+            const direction = timerDirectionSelect.value;
+            const targetSeconds = getTargetDurationSeconds();
+
+            if (direction === 'down') {
+                if (totalSeconds <= 0) initTimerDisplay();
+                if (totalSeconds <= 0) return;
+            } else {
+                if (targetSeconds > 0 && totalSeconds >= targetSeconds) {
+                    totalSeconds = 0;
+                    formatTimerDisplay(totalSeconds);
+                }
+            }
 
             isTimerRunning = true;
-            timerBtn.textContent = 'Stop Countdown';
+            timerBtn.textContent = 'Pause';
             timerBtn.classList.remove('btn-start');
             timerBtn.classList.add('btn-stop');
 
             timerInterval = setInterval(() => {
-                totalSeconds--;
-                formatTimerDisplay(totalSeconds);
+                if (direction === 'down') {
+                    totalSeconds--;
+                    formatTimerDisplay(totalSeconds);
 
-                if (totalSeconds <= 0) {
-                    clearInterval(timerInterval);
-                    isTimerRunning = false;
-                    timerBtn.textContent = 'Start Countdown';
-                    timerBtn.classList.remove('btn-stop');
-                    timerBtn.classList.add('btn-start');
+                    if (totalSeconds <= 0) {
+                        triggerTimeUpAlert();
+                    }
+                } else {
+                    totalSeconds++;
+                    formatTimerDisplay(totalSeconds);
 
-                    const customMsg = alertMessageInput.value.trim() || 'WAKTU HABIS!';
-                    largeTimerDisplay.textContent = customMsg;
-                    applyTimerStyles();
-                    timerWindow.classList.add('time-up');
-                    playBeepSound();
-                    broadcastSync();
+                    if (targetSeconds > 0 && totalSeconds >= targetSeconds) {
+                        triggerTimeUpAlert();
+                    }
                 }
             }, 1000);
         }
 
-        function stopTimer() {
+        function pauseTimer() {
             clearInterval(timerInterval);
             isTimerRunning = false;
-            timerBtn.textContent = 'Start Countdown';
+            timerBtn.textContent = 'Start';
             timerBtn.classList.remove('btn-stop');
             timerBtn.classList.add('btn-start');
-            resetTimerFlashing();
+            broadcastSync();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerBtn.textContent = 'Start';
+            timerBtn.classList.remove('btn-stop');
+            timerBtn.classList.add('btn-start');
+            timerWindow.classList.remove('time-up');
+            applyTimerStyles();
             initTimerDisplay();
             broadcastSync();
         }
 
         function resetTimerFlashing() {
             if (timerWindow.classList.contains('time-up')) {
-                timerWindow.classList.remove('time-up');
-                applyTimerStyles();
-                initTimerDisplay();
-                broadcastSync();
+                resetTimer();
             }
         }
 
