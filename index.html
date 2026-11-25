@@ -454,6 +454,7 @@
                         <select id="timerMode" onchange="changeTimerMode()">
                             <option value="down">⏳ Mundur (Countdown)</option>
                             <option value="up">⏱️ Maju (Count Up)</option>
+                            <option value="clock">🕒 Jam Saat Ini</option>
                         </select>
                     </div>
 
@@ -464,9 +465,15 @@
                         <input type="number" id="timerSecs" value="0" min="0" max="59" title="Detik"> d
                     </div>
 
-                    <!-- Opsi Tampilan Milidetik -->
+                    <!-- Pilihan Format Waktu yang Ditampilkan -->
                     <div class="control-item">
-                        <button class="btn btn-align active" id="toggleMsBtn" onclick="toggleMsDisplay()" title="Tampilkan/Sembunyikan Milidetik">.ms</button>
+                        <label for="timeFormatSelect">Format:</label>
+                        <select id="timeFormatSelect" onchange="changeTimeFormat()">
+                            <option value="hm">Jam : Menit</option>
+                            <option value="ms">Menit : Detik</option>
+                            <option value="hms">Jam : Menit : Detik</option>
+                            <option value="hmsms" selected>Jam : Menit : Detik . Milidetik</option>
+                        </select>
                     </div>
 
                     <div class="control-item">
@@ -488,8 +495,10 @@
                         <input type="text" id="alertMessage" value="WAKTU HABIS!" style="width: 110px;">
                     </div>
 
-                    <button class="btn btn-start" id="timerBtn" onclick="toggleTimer()">Start</button>
-                    <button class="btn" id="resetTimerBtn" onclick="resetTimer()">Reset</button>
+                    <div class="menu-group" id="timerActionButtons">
+                        <button class="btn btn-start" id="timerBtn" onclick="toggleTimer()">Start</button>
+                        <button class="btn" id="resetTimerBtn" onclick="resetTimer()">Reset</button>
+                    </div>
                 </div>
             </div>
 
@@ -525,6 +534,7 @@
 
         const timerWindow = document.getElementById('timerWindow');
         const timerModeSelect = document.getElementById('timerMode');
+        const timeFormatSelect = document.getElementById('timeFormatSelect');
         const timerHoursInput = document.getElementById('timerHours');
         const timerMinsInput = document.getElementById('timerMins');
         const timerSecsInput = document.getElementById('timerSecs');
@@ -535,11 +545,13 @@
         const largeTimerDisplay = document.getElementById('largeTimerDisplay');
         const timerBtn = document.getElementById('timerBtn');
         const lightAlertBtn = document.getElementById('lightAlertBtn');
-        const toggleMsBtn = document.getElementById('toggleMsBtn');
 
         let timerRafId = null;
+        let clockRafId = null;
         let isTimerRunning = false;
-        let showMilliseconds = true;
+
+        // Format Waktu yang Dipilih ('hm', 'ms', 'hms', 'hmsms')
+        let timeFormat = 'hmsms';
         
         // Variabel presisi tinggi (dalam milidetik)
         let remainingMs = 60000;
@@ -762,6 +774,12 @@
             const savedLayoutMode = localStorage.getItem('webLayoutMode');
             setLayoutMode(savedLayoutMode || 'editor');
 
+            const savedFormat = localStorage.getItem('webTimerFormat');
+            if (savedFormat) {
+                timeFormat = savedFormat;
+                timeFormatSelect.value = savedFormat;
+            }
+
             applyStyles();
             applyTimerStyles();
             updateStats();
@@ -898,33 +916,108 @@
         flashColor1Input.addEventListener('input', applyTimerStyles);
         flashColor2Input.addEventListener('input', applyTimerStyles);
 
-        // ==========================================
-        // LOGIKA TIMER (COUNTDOWN & COUNT UP + MS)
-        // ==========================================
-        function changeTimerMode() {
-            stopTimer();
+        // ========================================================
+        // PENGATURAN FORMAT TAMPILAN WAKTU
+        // ========================================================
+        function changeTimeFormat() {
+            timeFormat = timeFormatSelect.value;
+            localStorage.setItem('webTimerFormat', timeFormat);
+
             const mode = timerModeSelect.value;
-            if (mode === 'up') {
-                document.getElementById('durationInputs').style.opacity = '0.4';
-                document.getElementById('alertMsgGroup').style.opacity = '0.4';
-            } else {
-                document.getElementById('durationInputs').style.opacity = '1';
-                document.getElementById('alertMsgGroup').style.opacity = '1';
+            if (mode === 'clock') {
+                updateRealTimeClock(true);
+            } else if (!isTimerRunning) {
+                const ms = mode === 'down' ? remainingMs : elapsedMs;
+                formatTimerDisplay(ms, true);
             }
-            resetTimer();
         }
 
-        function toggleMsDisplay() {
-            showMilliseconds = !showMilliseconds;
-            toggleMsBtn.classList.toggle('active', showMilliseconds);
-            if (!isTimerRunning) {
-                const ms = timerModeSelect.value === 'down' ? remainingMs : elapsedMs;
-                formatTimerDisplay(ms, true);
+        // ==========================================================
+        // LOGIKA TIMER (COUNTDOWN, COUNT UP & JAM SAAT INI)
+        // ==========================================================
+        function stopRealTimeClock() {
+            if (clockRafId) {
+                cancelAnimationFrame(clockRafId);
+                clockRafId = null;
+            }
+        }
+
+        function startRealTimeClock() {
+            stopRealTimeClock();
+            function tickClock() {
+                if (timerModeSelect.value !== 'clock') return;
+                updateRealTimeClock(false);
+                clockRafId = requestAnimationFrame(tickClock);
+            }
+            updateRealTimeClock(true);
+            clockRafId = requestAnimationFrame(tickClock);
+        }
+
+        function updateRealTimeClock(forceSync = false) {
+            const now = new Date();
+            const h = now.getHours();
+            const m = now.getMinutes();
+            const s = now.getSeconds();
+            const centiseconds = Math.floor(now.getMilliseconds() / 10);
+
+            let formatted = '';
+            if (timeFormat === 'hm') {
+                formatted = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            } else if (timeFormat === 'ms') {
+                formatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            } else if (timeFormat === 'hms') {
+                formatted = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            } else {
+                formatted = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
+            }
+
+            largeTimerDisplay.textContent = formatted;
+
+            const perfNow = performance.now();
+            if (forceSync || (perfNow - lastSyncTime > 50)) {
+                broadcastSync();
+                lastSyncTime = perfNow;
+            }
+        }
+
+        function changeTimerMode() {
+            stopTimer();
+            stopRealTimeClock();
+            resetTimerFlashing();
+
+            const mode = timerModeSelect.value;
+            const durationInputs = document.getElementById('durationInputs');
+            const alertMsgGroup = document.getElementById('alertMsgGroup');
+            const timerActionButtons = document.getElementById('timerActionButtons');
+
+            if (mode === 'clock') {
+                durationInputs.style.display = 'none';
+                alertMsgGroup.style.display = 'none';
+                timerActionButtons.style.display = 'none';
+                startRealTimeClock();
+            } else if (mode === 'up') {
+                durationInputs.style.display = 'flex';
+                durationInputs.style.opacity = '0.4';
+                alertMsgGroup.style.display = 'flex';
+                alertMsgGroup.style.opacity = '0.4';
+                timerActionButtons.style.display = 'flex';
+                initTimerDisplay();
+            } else {
+                durationInputs.style.display = 'flex';
+                durationInputs.style.opacity = '1';
+                alertMsgGroup.style.display = 'flex';
+                alertMsgGroup.style.opacity = '1';
+                timerActionButtons.style.display = 'flex';
+                initTimerDisplay();
             }
         }
 
         function initTimerDisplay() {
             const mode = timerModeSelect.value;
+            if (mode === 'clock') {
+                startRealTimeClock();
+                return;
+            }
             if (mode === 'down') {
                 const h = parseInt(timerHoursInput.value) || 0;
                 const m = parseInt(timerMinsInput.value) || 0;
@@ -949,16 +1042,26 @@
             const h = Math.floor(totalSeconds / 3600);
             const m = Math.floor((totalSeconds % 3600) / 60);
             const s = totalSeconds % 60;
-            const centiseconds = Math.floor((ms % 1000) / 10); // 2 digit milidetik (00-99)
+            const centiseconds = Math.floor((ms % 1000) / 10);
 
-            let formatted = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-            if (showMilliseconds) {
-                formatted += `.${String(centiseconds).padStart(2, '0')}`;
+            let formatted = '';
+
+            if (timeFormat === 'hm') {
+                const adjSeconds = (timerModeSelect.value === 'down' && ms > 0) ? Math.ceil(ms / 1000) : totalSeconds;
+                const adjH = Math.floor(adjSeconds / 3600);
+                const adjM = Math.floor((adjSeconds % 3600) / 60);
+                formatted = `${String(adjH).padStart(2, '0')}:${String(adjM).padStart(2, '0')}`;
+            } else if (timeFormat === 'ms') {
+                const totalMins = Math.floor(totalSeconds / 60);
+                formatted = `${String(totalMins).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            } else if (timeFormat === 'hms') {
+                formatted = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            } else {
+                formatted = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
             }
 
             largeTimerDisplay.textContent = formatted;
 
-            // Sinkronkan ke layar ke-2 setiap ~50ms agar tetap lancar tanpa membebani storage
             const now = performance.now();
             if (forceSync || (now - lastSyncTime > 50)) {
                 broadcastSync();
@@ -1022,7 +1125,6 @@
                 }
                 formatTimerDisplay(remainingMs);
             } else {
-                // Mode Hitung Maju (Count Up)
                 elapsedMs += delta;
                 formatTimerDisplay(elapsedMs);
             }
